@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Conservative",
+    "ratePct": 4
+  },
+  {
+    "name": "Balanced",
+    "ratePct": 6
+  },
+  {
+    "name": "Growth",
+    "ratePct": 8
+  },
+  {
+    "name": "Aggressive",
+    "ratePct": 10
+  }
+]

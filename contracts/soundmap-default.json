@@ -1,0 +1,47 @@
+{
+  "defaultMap": {
+    "clear": "clear",
+    "sign": "operator",
+    "percent": "operator",
+    "dot": "rotate",
+    "equals": "equals",
+    "op+": "operator",
+    "op-": "operator",
+    "op*": "operator",
+    "op/": "operator",
+    "d0": "rotate",
+    "d1": "rotate",
+    "d2": "rotate",
+    "d3": "rotate",
+    "d4": "rotate",
+    "d5": "rotate",
+    "d6": "rotate",
+    "d7": "rotate",
+    "d8": "rotate",
+    "d9": "rotate",
+    "modeswitch": "modeswitch",
+    "success": "success",
+    "error": "error",
+    "easteregg": "easteregg",
+    "startup": "startup",
+    "memory": "tap3"
+  },
+  "gain": {
+    "equals": 0.5,
+    "success": 0.55,
+    "easteregg": 0.6,
+    "startup": 0.5,
+    "modeswitch": 0.5,
+    "error": 0.4,
+    "memory": 0.4
+  },
+  "defaultGain": 0.45,
+  "tapRotation": [
+    "tap1",
+    "tap2",
+    "tap3",
+    "tap4",
+    "tap5"
+  ],
+  "tapGain": 0.45
+}

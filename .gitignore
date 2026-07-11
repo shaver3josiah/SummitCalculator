@@ -1,0 +1,14 @@
+xcuserdata/
+DerivedData/
+.build/
+*.xcodeproj
+App/Resources/Fonts/
+.DS_Store
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+*.p8
+vendor/bundle/
+scripts/_raw/
+Generated-Info.plist

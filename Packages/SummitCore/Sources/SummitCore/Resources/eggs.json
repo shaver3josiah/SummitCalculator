@@ -1,0 +1,98 @@
+[
+ {
+  "id": "to-the-top",
+  "kind": "poem",
+  "title": "To the Top",
+  "dateLabel": "5 \u00b7 29 \u00b7 53",
+  "lines": [
+   "On this morning in 1953, two men stood where no one ever had: the top of the world.",
+   "They didn't get there in a day. They got there by refusing to stop.",
+   "Whatever you're carrying, keep walking. The summit doesn't come to you."
+  ],
+  "more": [
+   "ask: psst\u2026 iron sharpens iron",
+   "line: Type 27\u00d717 to keep climbing."
+  ],
+  "triggers": [
+   "5\u00f729\u00f753",
+   "5/29/53"
+  ]
+ },
+ {
+  "id": "iron-sharpens-iron",
+  "kind": "poem",
+  "title": "Iron Sharpens Iron",
+  "dateLabel": "27 \u00b7 17",
+  "lines": [
+   "As iron sharpens iron, so one man sharpens another. \u2014 Proverbs 27:17",
+   "Nobody summits alone. Find your rope team and hold the line."
+  ],
+  "more": [
+   "ask: psst\u2026 look up",
+   "line: Type 1+2+1 for the climber's psalm."
+  ],
+  "triggers": [
+   "27\u00d717",
+   "27*17"
+  ]
+ },
+ {
+  "id": "lift-my-eyes",
+  "kind": "poem",
+  "title": "I Lift My Eyes",
+  "dateLabel": "121",
+  "lines": [
+   "I lift up my eyes to the hills. From where does my help come?",
+   "My help comes from the LORD, the Maker of heaven and earth. \u2014 Psalm 121:1\u20132"
+  ],
+  "more": [
+   "ask: psst\u2026 one more ridge",
+   "line: Type 14\u00d758 for the long haul."
+  ],
+  "triggers": [
+   "1+2+1"
+  ]
+ },
+ {
+  "id": "fifty-eight-peaks",
+  "kind": "poem",
+  "title": "Fifty-Eight Peaks",
+  "dateLabel": "14 \u00b7 58",
+  "lines": [
+   "Colorado holds 58 peaks over fourteen thousand feet. Nobody climbs them all in a weekend.",
+   "Money grows the same way: one steady climb at a time, and the view keeps getting better."
+  ],
+  "more": null,
+  "triggers": [
+   "14\u00d758",
+   "14*58"
+  ]
+ },
+ {
+  "id": "a-little-secret",
+  "kind": "toast",
+  "title": "A little secret",
+  "dateLabel": "",
+  "lines": [
+   "42: the answer to life, the universe, and everything."
+  ],
+  "more": null,
+  "triggers": [
+   "7\u00d76",
+   "6\u00d77"
+  ]
+ },
+ {
+  "id": "well-spotted",
+  "kind": "toast",
+  "title": "Well spotted",
+  "dateLabel": "",
+  "lines": [
+   "144: a dozen dozens, stacked like cordwood."
+  ],
+  "more": null,
+  "triggers": [
+   "12\u00d712"
+  ]
+ }
+]

@@ -1,0 +1,106 @@
+# CI: builds, signs, and uploads Summit to TestFlight when a v* tag is pushed.
+name: release
+on:
+  push:
+    tags:
+      - "v*"
+jobs:
+  swift-test:
+    runs-on: ubuntu-latest
+    container: swift:6.0
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run SummitCore tests
+        run: swift test --package-path Packages/SummitCore
+  build-and-upload:
+    needs: swift-test
+    runs-on: macos-15
+    env:
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Select newest Xcode (iOS 26 SDK required to upload)
+        run: |
+          set -e
+          latest=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$latest" ]; then echo "No Xcode found under /Applications"; exit 1; fi
+          echo "Selecting $latest"
+          sudo xcode-select -s "$latest/Contents/Developer"
+          xcodebuild -version
+          echo "iOS SDKs:"; xcodebuild -showsdks | grep -i iphoneos || true
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Fetch fonts
+        run: bash scripts/fetch_fonts.sh
+      - name: Write App Store Connect API key
+        run: |
+          echo "${{ secrets.ASC_KEY_P8 }}" > "$RUNNER_TEMP/asc.p8"
+      - name: Generate Xcode project
+        run: xcodegen generate
+      - name: Archive
+        run: |
+          xcodebuild archive \
+            -project Summit.xcodeproj \
+            -scheme Summit \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "$RUNNER_TEMP/Summit.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/asc.p8" \
+            -authenticationKeyID "${{ secrets.ASC_KEY_ID }}" \
+            -authenticationKeyIssuerID "${{ secrets.ASC_ISSUER_ID }}" \
+            DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }}
+      - name: Inspect archive (icon/plist diagnostic)
+        run: |
+          set +e
+          APP="$RUNNER_TEMP/Summit.xcarchive/Products/Applications/Summit.app"
+          echo "=== .app listing ==="; ls -la "$APP"
+          echo "=== Assets.car present? ==="; ls -la "$APP/Assets.car" 2>/dev/null || echo "NO Assets.car"
+          echo "=== CFBundleIconName ==="; /usr/libexec/PlistBuddy -c "Print :CFBundleIconName" "$APP/Info.plist" 2>/dev/null || echo "MISSING CFBundleIconName"
+          echo "=== CFBundleDisplayName ==="; /usr/libexec/PlistBuddy -c "Print :CFBundleDisplayName" "$APP/Info.plist" 2>/dev/null || echo "MISSING CFBundleDisplayName"
+          echo "=== UIAppFonts ==="; /usr/libexec/PlistBuddy -c "Print :UIAppFonts" "$APP/Info.plist" 2>/dev/null || echo "MISSING UIAppFonts"
+          echo "=== AppIcon entries in Assets.car ==="; xcrun assetutil --info "$APP/Assets.car" 2>/dev/null | grep -iE "AppIcon|Idiom|PixelWidth|PixelHeight" | head -60
+          echo "=== full Info.plist ==="; plutil -p "$APP/Info.plist"
+          exit 0
+      - name: Verify bundled sounds and fonts
+        run: |
+          set -e
+          APP="$RUNNER_TEMP/Summit.xcarchive/Products/Applications/Summit.app"
+          missing=0
+          for f in tap1.mp3 tap2.mp3 tap3.mp3 tap4.mp3 tap5.mp3 operator.mp3 equals.mp3 clear.mp3 error.mp3 success.mp3 modeswitch.mp3 easteregg.mp3 startup.mp3 Archivo.ttf Bitter.ttf Bitter-Italic.ttf Rye-Regular.ttf; do
+            hit=$(find "$APP" -type f -name "$f")
+            if [ -z "$hit" ]; then
+              echo "MISSING: $f"
+              missing=1
+            else
+              echo "FOUND: $hit"
+            fi
+          done
+          if [ "$missing" -eq 1 ]; then
+            echo "One or more required bundled sounds/fonts are missing from the archived app."
+            exit 1
+          fi
+          echo "All 13 sounds and 4 fonts verified present in the archive."
+      - name: Export ipa
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Summit.xcarchive" \
+            -exportOptionsPlist App/Support/ExportOptions.plist \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/asc.p8" \
+            -authenticationKeyID "${{ secrets.ASC_KEY_ID }}" \
+            -authenticationKeyIssuerID "${{ secrets.ASC_ISSUER_ID }}"
+      - name: Install fastlane
+        run: bundle install
+      - name: Upload to TestFlight
+        env:
+          IPA_PATH: ${{ runner.temp }}/export/Summit.ipa
+          ASC_KEY_FILEPATH: ${{ runner.temp }}/asc.p8
+        run: bundle exec fastlane upload_testflight
+      - name: Remove API key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/asc.p8"
