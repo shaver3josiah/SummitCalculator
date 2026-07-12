@@ -79,8 +79,10 @@ final class ThemeStore {
     }
 
     func color(_ token: String) -> Color {
-        guard let hex = spec.tokens[token] else { return .clear }
-        return Color(hex: hex) ?? .clear
+        guard let raw = spec.tokens[token] else { return .clear }
+        // Most tokens are #RRGGBB; the shadow token is an rgba() string, so fall
+        // through to the rgba parser before giving up (else shadows go .clear).
+        return Color(hex: raw) ?? Color(rgba: raw) ?? .clear
     }
 
     func setPreset(_ name: String) {
@@ -235,5 +237,22 @@ extension Color {
         let g = Double((value >> 8) & 0xFF) / 255.0
         let b = Double(value & 0xFF) / 255.0
         self.init(red: r, green: g, blue: b)
+    }
+
+    /// Parse a CSS `rgba(r,g,b,a)` / `rgb(r,g,b)` string (r,g,b are 0–255, a is
+    /// 0–1). The theme `shadow` token is stored in this form, not hex.
+    init?(rgba: String) {
+        let trimmed = rgba.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.hasPrefix("rgb"),
+              let open = trimmed.firstIndex(of: "("),
+              let close = trimmed.firstIndex(of: ")") else { return nil }
+        let parts = trimmed[trimmed.index(after: open)..<close]
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+        guard parts.count >= 3,
+              let r = Double(parts[0]), let g = Double(parts[1]), let b = Double(parts[2])
+        else { return nil }
+        let a = parts.count >= 4 ? (Double(parts[3]) ?? 1) : 1
+        self.init(.sRGB, red: r / 255.0, green: g / 255.0, blue: b / 255.0, opacity: a)
     }
 }
