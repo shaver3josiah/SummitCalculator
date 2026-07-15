@@ -67,7 +67,7 @@ struct RecycleSheet: View {
                 .font(summitBody(14))
                 .foregroundStyle(theme.color("muted"))
                 .frame(width: 90, alignment: .leading)
-            TextField("0", text: binding(for: idx), prompt: Text("0").foregroundColor(theme.color("muted")))
+            TextField("0", text: binding(for: idx), prompt: Text("0").foregroundStyle(theme.color("muted")))
                 .keyboardType(.decimalPad)
                 .font(summitNumber(18))
                 .padding(10)
@@ -126,7 +126,14 @@ struct RecycleSheet: View {
     }
 
     private func applyRecycle() {
-        calc.recycle(tokens: tokens)
+        var stream = ""
+        for (i, token) in tokens.enumerated() {
+            stream += token
+            if i < operators.count {
+                stream += operators[i]
+            }
+        }
+        calc.replayTokens(stream)
         sound.play("success")
         dismiss()
     }
