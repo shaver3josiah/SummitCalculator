@@ -18,7 +18,7 @@ enum SummitTab: String, CaseIterable, Identifiable {
         case .lists: return "Lists"
         case .kitchen: return "Kitchen"
         case .tools: return "Tools"
-        case .budget: return "Monthly Budget"
+        case .budget: return "Budget"
         case .music: return "Music"
         }
     }

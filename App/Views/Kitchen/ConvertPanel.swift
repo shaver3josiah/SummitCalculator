@@ -65,6 +65,7 @@ struct ConvertPanel: View {
             .frame(maxWidth: 520)   // keep the amount + pickers from stretching stringy on iPad
 
             convertIllustration
+                .frame(maxWidth: 420)   // center the illustration in a wide (landscape/iPad) rail instead of letting the tap area sprawl; glyph aspect is already safe via MeasureGlyph's square box
                 .padding(.horizontal, 20)
                 .scaleEffect(illustrationBounce ? 0.94 : 1.0)
                 .animation(.spring(response: 0.32, dampingFraction: 0.55), value: illustrationBounce)

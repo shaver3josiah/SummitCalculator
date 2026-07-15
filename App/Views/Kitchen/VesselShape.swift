@@ -49,11 +49,14 @@ struct CupHandle: Shape {
         func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
             CGPoint(x: rect.minX + x * w, y: rect.minY + y * h)
         }
-        // Loop bulges a touch further right than a wire handle would, so the 2×
-        // stroke (goldDetails) still leaves a visible opening against the body.
-        p.move(to: pt(0.83, 0.22))
-        p.addQuadCurve(to: pt(1.02, 0.42), control: pt(1.10, 0.25))
-        p.addQuadCurve(to: pt(0.80, 0.62), control: pt(1.05, 0.62))
+        // Both endpoints sit INSIDE the body silhouette (the right wall runs
+        // x≈0.82→0.77 over this y-range), so the thick stroke overlaps the cup
+        // paint and reads as one welded ceramic piece — the old endpoints landed
+        // just outside the tapered wall, leaving the handle floating (seen in a
+        // user photo). The loop still bulges right for a visible opening.
+        p.move(to: pt(0.78, 0.20))
+        p.addQuadCurve(to: pt(1.00, 0.42), control: pt(1.06, 0.24))
+        p.addQuadCurve(to: pt(0.72, 0.64), control: pt(1.02, 0.62))
         return p
     }
 }
@@ -123,31 +126,42 @@ struct MeasureGlyph: View {
 
     var body: some View {
         GeometryReader { geo in
+            // Draw into a CENTERED SQUARE box (side = min(width, height)) so the
+            // unit-square vessel art keeps its ~1:1 design aspect at any container
+            // width. Extra container width becomes side margin instead of a
+            // horizontal stretch. The box has origin .zero and the ZStack is
+            // framed to side×side and centered via .position, so every part
+            // (fill, mask, outline, handle, gold ticks/labels) shares one
+            // coordinate space and stays registered.
+            let side = min(geo.size.width, geo.size.height)
+            let box = CGRect(origin: .zero, size: CGSize(width: side, height: side))
             ZStack {
-                vesselPath(in: geo)
+                vesselPath(in: box)
                     .fill(theme.color("surface"))
 
-                liquid(in: geo)
+                liquid(in: box)
 
-                vesselPath(in: geo)
+                vesselPath(in: box)
                     .stroke(outlineGradient, style: StrokeStyle(lineWidth: 1.6, lineJoin: .round))
 
-                goldDetails(in: geo)
+                goldDetails(in: box)
             }
+            .frame(width: side, height: side)
+            .position(x: geo.size.width / 2, y: geo.size.height / 2)
         }
         .frame(height: height)
     }
 
-    private func vesselPath(in geo: GeometryProxy) -> Path {
+    private func vesselPath(in box: CGRect) -> Path {
         switch kind {
-        case .cup: return CupBody().path(in: CGRect(origin: .zero, size: geo.size))
-        case .tablespoon: return SpoonBody(smallBowl: false).path(in: CGRect(origin: .zero, size: geo.size))
-        case .teaspoon: return SpoonBody(smallBowl: true).path(in: CGRect(origin: .zero, size: geo.size))
+        case .cup: return CupBody().path(in: box)
+        case .tablespoon: return SpoonBody(smallBowl: false).path(in: box)
+        case .teaspoon: return SpoonBody(smallBowl: true).path(in: box)
         }
     }
 
-    private func liquid(in geo: GeometryProxy) -> some View {
-        vesselPath(in: geo)
+    private func liquid(in box: CGRect) -> some View {
+        vesselPath(in: box)
             .fill(
                 LinearGradient(
                     colors: [theme.color("primary"), theme.color("primaryStrong")],
@@ -157,23 +171,23 @@ struct MeasureGlyph: View {
             )
             .mask(alignment: .bottom) {
                 Rectangle()
-                    .frame(height: geo.size.height * kind.bowlSpan * clampedFraction)
+                    .frame(height: box.height * kind.bowlSpan * clampedFraction)
                     .frame(maxHeight: .infinity, alignment: .bottom)
             }
             .animation(reduceMotion ? nil : .spring(response: 0.6, dampingFraction: 0.85), value: fraction)
     }
 
     @ViewBuilder
-    private func goldDetails(in geo: GeometryProxy) -> some View {
-        let rect = CGRect(origin: .zero, size: geo.size)
+    private func goldDetails(in rect: CGRect) -> some View {
         let gold = theme.color("flowerCenter")
         switch kind {
         case .cup:
-            // Handle reads as a solid loop, not a wire — 2× the old weight,
-            // proportional to the glyph so the small count-grid cups keep the
-            // same sturdy look as the hero.
+            // Handle reads as a solid loop, not a wire — but capped at 12pt: the
+            // old uncapped 9%-of-height stroke hit ~22pt on the hero cup, which
+            // looked like a pool noodle (user photo). 4pt floor keeps the small
+            // count-grid cups sturdy.
             CupHandle().path(in: rect)
-                .stroke(outlineGradient, style: StrokeStyle(lineWidth: max(rect.height * 0.09, 5.2), lineCap: .round))
+                .stroke(outlineGradient, style: StrokeStyle(lineWidth: min(max(rect.height * 0.07, 4), 12), lineCap: .round))
             // Gold rim.
             Path { p in
                 p.move(to: CGPoint(x: 0.22 * rect.width, y: 0.10 * rect.height))
@@ -292,6 +306,10 @@ struct ScaleFill: View {
 
     var body: some View {
         GeometryReader { geo in
+            // Same centered-square box as MeasureGlyph: the dial/base/needle are
+            // sized from a min(width,height) side so the scale keeps its intended
+            // proportions (and the pivot stays over the needle base) at any width.
+            let side = min(geo.size.width, geo.size.height)
             ZStack {
                 ScaleBase()
                     .stroke(
@@ -322,8 +340,10 @@ struct ScaleFill: View {
                 Circle()
                     .fill(theme.color("flowerCenter"))
                     .frame(width: 7, height: 7)
-                    .position(x: geo.size.width / 2, y: geo.size.height * 0.34)
+                    .position(x: side / 2, y: side * 0.34)
             }
+            .frame(width: side, height: side)
+            .position(x: geo.size.width / 2, y: geo.size.height / 2)
         }
         .frame(height: 140)
     }

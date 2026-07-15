@@ -183,6 +183,19 @@ final class VectorTests: XCTestCase {
         }
     }
 
+    func testPendingOp() {
+        var engine = CalcEngine()
+        XCTAssertNil(engine.pendingOp)          // nothing queued at rest
+        engine.digit("5")
+        XCTAssertNil(engine.pendingOp)          // typing an operand: still nothing queued
+        engine.setOp(.add)
+        XCTAssertEqual(engine.pendingOp, .add)  // operator pressed, awaiting operand
+        engine.digit("3")
+        XCTAssertNil(engine.pendingOp)          // next digit clears the highlight
+        _ = engine.equals()
+        XCTAssertNil(engine.pendingOp)          // equals resets
+    }
+
     func testEggCount() {
         XCTAssertEqual(VectorTests.vectors.eggs.count, 18)
     }

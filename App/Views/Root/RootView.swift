@@ -265,7 +265,7 @@ struct RootView: View {
         } else {
             withAnimation(SummitMotion.glide) { selectedTab = tab }
         }
-        // Leaf curtain only the first time she ever opens each tab.
+        // Leaf curtain only the first time you ever open each tab.
         if themeStore.firstVisit(tab.rawValue) {
             themeStore.triggerCurtain()
         }
