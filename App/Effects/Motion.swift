@@ -12,6 +12,8 @@ enum SummitMotion {
     static let glide = Animation.timingCurve(0.16, 1, 0.3, 1, duration: panelGlide)
     /// Outline draw — cubic-bezier(.35,0,.15,1).
     static let draw = Animation.timingCurve(0.35, 0, 0.15, 1, duration: outlineDraw)
+    /// Soft presentation spring shared by toasts, overlays and result reveals.
+    static let springSoft = Animation.spring(response: 0.45, dampingFraction: 0.8)
 }
 
 /// Feathered clear→white→clear gloss, angled 18° and sized to half the given
@@ -112,10 +114,9 @@ struct EncircleOutline<Trigger: Equatable>: View {
 
 /// Ambient "jewel glint" for the single hero CTA (the `=` key). Deliberately a
 /// low-contrast directional gloss that eases once across — slow in, quick through
-/// the middle, soft out (smoothstep position mapping over a plain linear clock) —
-/// then parks off-screen and rests ~3.9s before the next glint. It is NOT a looping
-/// opacity/breathe pulse (the AI-slop "breathing CTA" fingerprint): the clock loops,
-/// the light does not; each cycle is a single glint→rest, never a continuous shimmer.
+/// the middle, soft out — then parks off-screen and rests ~3.9s before the next
+/// glint. It is NOT a looping opacity/breathe pulse (the AI-slop "breathing CTA"
+/// fingerprint): each cycle is a single glint→rest, never a continuous shimmer.
 /// The band itself is feathered (soft shoulders, peak white ≤0.2) so it reads as
 /// light on a surface, and a static top-left specular dot gives the key material
 /// depth. One element only, gated behind the motion toggle + Reduce Motion, so it
@@ -123,10 +124,6 @@ struct EncircleOutline<Trigger: Equatable>: View {
 struct AmbientShimmer: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var cornerRadius: CGFloat = 12
-    private let period: Double = 5           // one glint every 5s
-    private let sweepFraction: CGFloat = 0.22 // ~1.1s sweeping, ~3.9s parked off-screen
-
-    @State private var t: CGFloat = 0
 
     var body: some View {
         if reduceMotion {
@@ -141,19 +138,20 @@ struct AmbientShimmer: View {
                     startRadius: 0, endRadius: 20
                 )
                 GeometryReader { geo in
-                    let p = min(t / sweepFraction, 1)   // races across, then holds off-screen right
-                    let eased = p * p * (3 - 2 * p)      // smoothstep: soft ends, fast centre
                     glossBand(peak: 0.2, full: geo.size.width)
-                        .offset(x: (-1.1 + eased * 2.2) * geo.size.width)
+                        .keyframeAnimator(initialValue: CGFloat(-1.1), repeating: true) { view, x in
+                            view.offset(x: x * geo.size.width)
+                        } keyframes: { _ in
+                            KeyframeTrack {
+                                CubicKeyframe(1.1, duration: 1.1)
+                                LinearKeyframe(1.1, duration: 3.9)
+                                MoveKeyframe(-1.1)
+                            }
+                        }
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
             .allowsHitTesting(false)
-            .onAppear {
-                withAnimation(.linear(duration: period).repeatForever(autoreverses: false)) {
-                    t = 1
-                }
-            }
         }
     }
 }
