@@ -23,11 +23,13 @@ final class SoundStore {
     // "cue" routes to CueSynth's uplifting rising cue instead of an mp3, so
     // transition events feel like a lift by construction. Users can override any
     // of these to an mp3 via eventMap and that explicit choice is honored.
+    // Digits and dot default to the soft "thud" block knock; clear (AC and ⌫)
+    // defaults to the lighter "thok" wood knock.
     static let defaultMap: [String: String] = [
-        "clear": "clear", "sign": "operator", "percent": "operator", "dot": "rotate", "equals": "equals",
+        "clear": "thok", "sign": "operator", "percent": "operator", "dot": "thud", "equals": "equals",
         "op+": "operator", "op-": "operator", "op*": "operator", "op/": "operator",
-        "d0": "rotate", "d1": "rotate", "d2": "rotate", "d3": "rotate", "d4": "rotate",
-        "d5": "rotate", "d6": "rotate", "d7": "rotate", "d8": "rotate", "d9": "rotate",
+        "d0": "thud", "d1": "thud", "d2": "thud", "d3": "thud", "d4": "thud",
+        "d5": "thud", "d6": "thud", "d7": "thud", "d8": "thud", "d9": "thud",
         "modeswitch": "cue", "success": "cue", "error": "error",
         "easteregg": "easteregg", "startup": "cue", "memory": "tap3"
     ]
@@ -36,6 +38,42 @@ final class SoundStore {
     /// clear (⌫ delete AND AC) and dot (period) are quieter by default; the user
     /// can still override to anything by writing an explicit eventVolumes entry.
     static let defaultVolumes: [String: Float] = ["clear": 0.6, "dot": 0.6]
+
+    /// Chunky + tactile: block thuds on every digit, wood knocks on operators,
+    /// a cheerful two-note bell ding on the result.
+    static let blockyMap: [String: String] = [
+        "d0": "thud", "d1": "thud", "d2": "thud", "d3": "thud", "d4": "thud",
+        "d5": "thud", "d6": "thud", "d7": "thud", "d8": "thud", "d9": "thud",
+        "dot": "thud", "sign": "thok", "percent": "thok",
+        "op+": "thok", "op-": "thok", "op*": "thok", "op/": "thok",
+        "equals": "ding", "clear": "thud",
+        "modeswitch": "thok", "success": "ding", "startup": "ding",
+        "error": "error", "easteregg": "easteregg", "memory": "thok"
+    ]
+
+    /// Sci-fi console: laser zaps on digits, pews on operators, a warp rise
+    /// for the result and every transition.
+    static let galaxyMap: [String: String] = [
+        "d0": "zap", "d1": "zap", "d2": "zap", "d3": "zap", "d4": "zap",
+        "d5": "zap", "d6": "zap", "d7": "zap", "d8": "zap", "d9": "zap",
+        "dot": "zap", "sign": "pew", "percent": "pew",
+        "op+": "pew", "op-": "pew", "op*": "pew", "op/": "pew",
+        "equals": "warp", "clear": "zap",
+        "modeswitch": "warp", "success": "warp", "startup": "warp",
+        "error": "error", "easteregg": "easteregg", "memory": "zap"
+    ]
+
+    /// Heroic fantasy: harp plucks on digits, deep drums on operators, a noble
+    /// horn swell for the result and every transition.
+    static let questMap: [String: String] = [
+        "d0": "harp", "d1": "harp", "d2": "harp", "d3": "harp", "d4": "harp",
+        "d5": "harp", "d6": "harp", "d7": "harp", "d8": "harp", "d9": "harp",
+        "dot": "harp", "sign": "drum", "percent": "drum",
+        "op+": "drum", "op-": "drum", "op*": "drum", "op/": "drum",
+        "equals": "horn", "clear": "harp",
+        "modeswitch": "horn", "success": "horn", "startup": "horn",
+        "error": "error", "easteregg": "easteregg", "memory": "harp"
+    ]
 
     /// A playful mapping composed entirely from the EXISTING sound palette
     /// (optionChoices) — no new mp3s. Music-box "rotate" on all digits + dot,
@@ -84,6 +122,9 @@ final class SoundStore {
     }
     static let presets: [Preset] = [
         Preset(id: "Classic", systemImage: "music.note", map: nil),
+        Preset(id: "Blocky", systemImage: "cube.fill", map: blockyMap),
+        Preset(id: "Galaxy", systemImage: "moon.stars.fill", map: galaxyMap),
+        Preset(id: "Quest", systemImage: "shield.fill", map: questMap),
         Preset(id: "Fun", systemImage: "sparkles", map: funMap),
         Preset(id: "Alpine", systemImage: "mountain.2.fill", map: alpineMap),
         Preset(id: "Timber", systemImage: "tree.fill", map: timberMap)
@@ -111,6 +152,9 @@ final class SoundStore {
     static let optionChoices: [(String, String)] = [
         ("rotate", "Music box (rotating)"),
         ("cue", "Uplifting rise"),
+        ("thud", "Block thud"), ("thok", "Wood knock"), ("ding", "Bell ding"),
+        ("zap", "Laser zap"), ("pew", "Laser pew"), ("warp", "Warp rise"),
+        ("harp", "Harp pluck"), ("drum", "Deep drum"), ("horn", "Epic horn"),
         ("tap1", "Tap 1"), ("tap2", "Tap 2"), ("tap3", "Tap 3"), ("tap4", "Tap 4"), ("tap5", "Tap 5"),
         ("operator", "Operator"), ("equals", "Equals"), ("clear", "Clear"), ("error", "Error"),
         ("success", "Success"), ("modeswitch", "Mode switch"), ("easteregg", "Easter egg"),

@@ -43,7 +43,7 @@ jobs:
           fi
           echo "Inspecting $APP"
           missing=0
-          for f in tap1.mp3 tap2.mp3 tap3.mp3 tap4.mp3 tap5.mp3 operator.mp3 equals.mp3 clear.mp3 error.mp3 success.mp3 modeswitch.mp3 easteregg.mp3 startup.mp3 Archivo.ttf Bitter.ttf Bitter-Italic.ttf Rye-Regular.ttf; do
+          for f in tap1.mp3 tap2.mp3 tap3.mp3 tap4.mp3 tap5.mp3 operator.mp3 equals.mp3 clear.mp3 error.mp3 success.mp3 modeswitch.mp3 easteregg.mp3 startup.mp3 thud.mp3 thok.mp3 ding.mp3 zap.mp3 pew.mp3 warp.mp3 harp.mp3 drum.mp3 horn.mp3 Archivo.ttf Bitter.ttf Bitter-Italic.ttf Rye-Regular.ttf; do
             hit=$(find "$APP" -type f -name "$f")
             if [ -z "$hit" ]; then
               echo "MISSING: $f"
@@ -56,4 +56,4 @@ jobs:
             echo "One or more required bundled sounds/fonts are missing from the built app."
             exit 1
           fi
-          echo "All 13 sounds and 4 fonts verified present in the built app."
+          echo "All 22 sounds and 4 fonts verified present in the built app."

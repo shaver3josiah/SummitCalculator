@@ -3,10 +3,12 @@
 Adapted from Bloom's generate_princess_sounds.py (harp + music-box, C5 pentatonic)
 to a masculine rustic voice: Karplus-Strong plucks tuned like a parlor guitar and
 an additive "marimba" wood-bar preset, dropped an octave-plus into C3, through a
-longer valley-style convolution reverb. Same 13 event names as the app/CI expect.
+longer valley-style convolution reverb. The original 13 event names plus 9
+one-off voices for the Blocky / Galaxy / Quest packs (22 files total).
 
-Usage: python scripts/generate_summit_sounds.py [outdir]
+Usage: python scripts/generate_summit_sounds.py [outdir] [name ...]
 Default outdir: App/Resources/Sounds (overwrites the Bloom-era files).
+Extra args filter to just those job names (e.g. "thud zap horn").
 Requires: numpy, lameenc (pip install lameenc).
 """
 import numpy as np
@@ -145,15 +147,108 @@ JOBS['easteregg'] = ([(0.0, 'pluck', 'G3', 0.45, 1.1), (0.0, 'marimba', 'C4', 0.
 JOBS['startup'] = ([(0.0, 'pluck', 'C2', 0.5, 2.0), (0.0, 'pluck', 'C3', 0.7, 1.3), (0.22, 'pluck', 'E3', 0.7, 1.3), (0.44, 'pluck', 'G3', 0.7, 1.3), (0.66, 'pluck', 'A3', 0.7, 1.3), (0.88, 'pluck', 'C4', 0.75, 1.5)], 0.3, 1.9, 3.6)
 
 
+# --- 9 one-off voices (Blocky / Galaxy / Quest packs) -----------------------
+# Builders return the DRY signal; main() runs them through the same
+# finish(reverb(...)) chain as render(). Each gets its own fixed seed so a
+# filtered regeneration is byte-identical to a full run.
+
+def mix(parts):
+    """Sum (start_sec, signal) parts into one buffer."""
+    buf = np.zeros(max(int(s * SR) + v.size for s, v in parts))
+    for s, v in parts:
+        i = int(s * SR)
+        buf[i:i + v.size] += v
+    return buf
+
+
+def knock(f_hi, f_lo, drop, tau, total, noise_amp, noise_dur):
+    """Sine knock: exponential pitch drop f_hi->f_lo over `drop` seconds (then
+    held), exponential amp decay (tau), plus a short lowpassed white-noise
+    attack transient layered on top."""
+    t = np.arange(int(total * SR)) / SR
+    f = f_hi * (f_lo / f_hi) ** np.minimum(t / drop, 1.0)
+    sig = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t / tau)
+    n = int(noise_dur * SR)
+    noise = np.convolve(np.random.uniform(-1, 1, n), np.ones(16) / 16.0, mode='same')
+    sig[:n] += noise * np.linspace(1, 0, n) * noise_amp
+    return sig
+
+
+def chirp(f_hi, f_lo, dur, tau, harm):
+    """Descending exponential frequency chirp; harm = per-harmonic amplitudes
+    [h1, h2, ...] (odd-only ~ square-ish, 1/n ladder ~ saw-like)."""
+    t = np.arange(int(dur * SR)) / SR
+    f = f_hi * (f_lo / f_hi) ** (t / dur)
+    phase = 2 * np.pi * np.cumsum(f) / SR
+    sig = np.zeros_like(t)
+    for i, a in enumerate(harm, 1):
+        if a:
+            sig += a * np.sin(i * phase)
+    return sig * np.exp(-t / tau)
+
+
+def warp_rise():
+    """Rising 180->720 Hz sweep, soft 5th-harmonic shimmer, swell envelope
+    (slow attack, soft release). Reads as "engage"."""
+    dur = 0.38
+    t = np.arange(int(dur * SR)) / SR
+    f = 180.0 * (720.0 / 180.0) ** (t / dur)
+    phase = 2 * np.pi * np.cumsum(f) / SR
+    sig = np.sin(phase) + 0.15 * np.sin(5 * phase)
+    return sig * np.clip(t / 0.15, 0, 1) * np.clip((dur - t) / 0.12, 0, 1)
+
+
+def horn_swell():
+    """Noble C3+G3 swell: three decreasing harmonics per note, each note
+    doubled with a slight detune for slow beating; ~120ms attack, ~200ms
+    sustain, ~260ms release."""
+    dur = 0.58
+    t = np.arange(int(dur * SR)) / SR
+    sig = np.zeros_like(t)
+    for f0 in (freq('C3'), freq('G3')):
+        for det in (1.0, 1.004):
+            for h, a in ((1, 1.0), (2, 0.5), (3, 0.25)):
+                sig += a * 0.5 * np.sin(2 * np.pi * f0 * det * h * t)
+    return sig * np.clip(t / 0.12, 0, 1) * np.clip((dur - t) / 0.26, 0, 1)
+
+
+NEW = {
+    'thud': (lambda: knock(170, 85, 0.10, 0.035, 0.14, 0.5, 0.015), 0.05, 0.35),
+    'thok': (lambda: knock(260, 140, 0.08, 0.028, 0.11, 0.5, 0.012), 0.05, 0.3),
+    'ding': (lambda: mix([(0.0, bell(freq('E5'), 0.5, *MARIMBA) * 0.8),
+                          (0.08, bell(freq('B5'), 0.5, *MARIMBA) * 0.8)]), 0.18, 0.9),
+    'zap': (lambda: chirp(1600, 220, 0.12, 0.045, [1.0, 0, 0.2, 0, 0.1]), 0.06, 0.3),
+    'pew': (lambda: chirp(900, 140, 0.16, 0.06, [1.0, 0.5, 0.33, 0.25]), 0.08, 0.35),
+    'warp': (warp_rise, 0.15, 0.8),
+    'harp': (lambda: pluck(freq('E4'), 0.8, decay=0.996) * 0.9, 0.15, 0.9),
+    'drum': (lambda: knock(130, 55, 0.22, 0.09, 0.5, 0.4, 0.008), 0.12, 0.5),
+    'horn': (horn_swell, 0.22, 1.2),
+}
+
+
 def main():
     np.random.seed(7)
     os.makedirs(OUT, exist_ok=True)
+    only = set(sys.argv[2:])  # optional job-name filter: regenerate just these
+    wrote = 0
     for name, (events, wet, decay, span) in JOBS.items():
+        if only and name not in only:
+            continue
         sig = render(events, wet, decay, span)
         path = os.path.join(OUT, name + '.mp3')
         write_mp3(path, sig)
         print(name + '.mp3', os.path.getsize(path))
-    print('wrote %d files to %s' % (len(JOBS), OUT))
+        wrote += 1
+    for i, (name, (build, wet, decay)) in enumerate(NEW.items()):
+        if only and name not in only:
+            continue
+        np.random.seed(100 + i)  # per-job seed: stable bytes regardless of filter
+        sig = finish(reverb(build(), wet, decay))
+        path = os.path.join(OUT, name + '.mp3')
+        write_mp3(path, sig)
+        print(name + '.mp3', os.path.getsize(path))
+        wrote += 1
+    print('wrote %d files to %s' % (wrote, OUT))
 
 
 if __name__ == '__main__':

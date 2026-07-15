@@ -14,7 +14,8 @@ final class SoundPlayer: @unchecked Sendable {
     private let soundNames = [
         "tap1", "tap2", "tap3", "tap4", "tap5",
         "operator", "equals", "clear", "error", "success",
-        "modeswitch", "easteregg", "startup"
+        "modeswitch", "easteregg", "startup",
+        "thud", "thok", "ding", "zap", "pew", "warp", "harp", "drum", "horn"
     ]
     private var sessionConfigured = false
     private let logger = Logger(subsystem: "com.shaver.summitcalculator", category: "SoundPlayer")
@@ -50,7 +51,7 @@ final class SoundPlayer: @unchecked Sendable {
         }
     }
 
-    /// Resolve + validate all 13 bundled mp3 URLs up front, so a missing asset is
+    /// Resolve + validate all 22 bundled mp3 URLs up front, so a missing asset is
     /// still caught at launch with the same log + DEBUG assert as before. We only
     /// stop short of decoding them — AVAudioPlayer creation moves to first play().
     private func resolveURLs() {
@@ -72,7 +73,7 @@ final class SoundPlayer: @unchecked Sendable {
 
     /// Build-on-demand + cache. prepareToPlay() on a small keypad mp3 is ~a few
     /// ms; the keypad tap already tolerates that (the sound isn't in the touch's
-    /// critical path), so first-tap decode is the accepted cost of not holding 13
+    /// critical path), so first-tap decode is the accepted cost of not holding 22
     /// decoded players resident. After the first play of a given sound it stays
     /// warm for the session (until a memory warning drops it).
     private func player(for name: String) -> AVAudioPlayer? {
