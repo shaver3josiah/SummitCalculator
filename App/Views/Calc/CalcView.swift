@@ -6,8 +6,8 @@ struct CalcView: View {
     @Environment(CalcStore.self) private var calcStore
     @Environment(HistoryStore.self) private var historyStore
     @Environment(MusicStore.self) private var musicStore
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var activeSolver: MathSolver?
-    @State private var wheelSelection = 0   // inert: the chord wheel is a viewer, not a control
 
     private let keypadRows: [[KeyDef]] = [
         [KeyDef(label: "AC", key: "C", event: "clear", accent: true),
@@ -33,28 +33,34 @@ struct CalcView: View {
     ]
 
     var body: some View {
-        // Everything is sized from CalcView's real slot so NOTHING can clip:
-        // fixed chrome = 8 top pad + ~42 memory bar + 2×16 spacing = 82. The
-        // remainder splits between keypad and display card — keys run at their
-        // ideal 58pt when there's room and compress (never below 44pt) on small
-        // phones like the SE, with the card taking all the rest. Bigger devices
-        // therefore scale the display up while the keypad stays hand-sized.
+        // Everything is sized from CalcView's real slot so NOTHING can clip, and it
+        // scales up (never just leaves a void) on larger devices:
+        //   • keys grow 44→72pt (44 floor keeps them tappable on an SE)
+        //   • the card is the residual after the keypad, clamped 128–210 — so on
+        //     phones it fills (cluster ≈ slot, keypad sits near the bottom) and on a
+        //     tablet it caps at a generous 210 rather than ballooning
+        //   • resultFont tracks the card (the DEVICE), never the digit count, so the
+        //     number is a constant size and long values scroll instead of shrinking
+        // The cluster is CENTERED: on phones the residual card makes the margin ~14pt
+        // (still bottom-anchored feel); on iPad the capped elements center with
+        // balanced margins instead of dumping a ~380pt gap under the card.
         GeometryReader { geo in
-            let slack = geo.size.height - 82
-            let keyHeight = min(58.0, max(44.0, (slack - 120 - 40) / 5))
-            let cardHeight = max(120, slack - (keyHeight * 5 + 40))
+            let slack = geo.size.height - 98            // 98 = ~memory bar + gaps
+            let keyHeight = min(72.0, max(44.0, (slack - 190) / 5))
+            let keypadBlock = keyHeight * 5 + 40        // 5 rows + 4×10 gaps
+            let cardHeight = min(210.0, max(128.0, slack - keypadBlock))
+            let resultFont = min(92.0, max(40.0, cardHeight * 0.44))
             VStack(spacing: 16) {
-                displayArea
+                displayArea(resultFont: resultFont)
                     .frame(height: cardHeight)
-                // Display card owns the full 700 column (big result + log look glorious
-                // wide); the tappable cluster caps at 460 centered so keys don't become
+                // The tappable cluster caps at 460 centered so keys don't become
                 // ~160pt slabs on iPad. On compact phones (<460) these don't constrain.
                 memoryBar
                     .frame(maxWidth: 460)
                 keypad(keyHeight: keyHeight)
                     .frame(maxWidth: 460)
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)
@@ -78,20 +84,19 @@ struct CalcView: View {
         themeStore.showCalcLog || themeStore.showChordWheel
     }
 
-    // The display card. Its height is set explicitly in `body` (slot height minus the
-    // fixed chrome), never scavenged from VStack arbitration — the old bug: the
-    // flexible card lost the arbitration to the flexible keypad and starved to
-    // ~105pt, flooring the result at 58pt. The result Text auto-shrinks a 280pt font
-    // to fill the slot, so "10" renders huge and "1234567.89" still fits.
-    private var displayArea: some View {
-        HStack(alignment: .top, spacing: 12) {
+    // The display card. Height is set explicitly in `body` (slot minus fixed chrome),
+    // never scavenged from VStack arbitration. Two-line calculator layout on the right:
+    // the live expression fills the top band (previously empty), the fixed-size result
+    // sits below it and scrolls horizontally instead of shrinking.
+    private func displayArea(resultFont: CGFloat) -> some View {
+        HStack(alignment: .top, spacing: 8) {
             if showLeftColumn {
                 leftColumn
             }
-            resultColumn
+            resultColumn(fontSize: resultFont)
         }
         .padding(.horizontal, 18)
-        .padding(.vertical, 22)
+        .padding(.vertical, 16)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
         .background(themeStore.color("surfaceSoft"))
         .clipShape(RoundedRectangle(cornerRadius: themeStore.radius))
@@ -119,68 +124,114 @@ struct CalcView: View {
         }
     }
 
-    // Result column: just the giant auto-shrinking number. The old expression line
-    // ("7 + 6") is gone — the calc log at top-left already tells that story, and
-    // removing it hands its height to the result. The 280pt font is a ceiling —
-    // minimumScaleFactor(0.1) + the fill frame let SwiftUI scale glyphs down to fit
-    // BOTH the card width and height, so short answers render enormous and long
-    // ones still fit on one line, pinned bottom-trailing.
-    private var resultColumn: some View {
-        RollingNumberText(
-            text: calcStore.display,
-            font: summitNumber(280, weight: .semibold),
-            color: themeStore.color("text")
-        )
-        .lineLimit(1)
-        .minimumScaleFactor(0.1)
+    // Right side of the card: a slim live-expression line up top (the one thing the
+    // history log — which only holds completed calcs — never shows), and below it the
+    // result at a fixed device-sized font. Long results scroll to the trailing edge
+    // like a cash-register tape; the digits keep their size, the tape moves.
+    private func resultColumn(fontSize: CGFloat) -> some View {
+        VStack(alignment: .trailing, spacing: 2) {
+            Text(calcStore.expression)
+                .font(summitNumber(20, weight: .medium))
+                .foregroundStyle(themeStore.color("muted"))
+                .lineLimit(1)
+                .truncationMode(.head)   // keep the newest (right) end of a long expression
+                .frame(maxWidth: .infinity, alignment: .trailing)
+
+            Spacer(minLength: 0)
+
+            // The result at a fixed size. GeometryReader gives the row width so short
+            // values right-align and long ones overflow into a horizontal scroll,
+            // trailing-anchored — the digits never resize, the "tape" moves.
+            ScrollViewReader { proxy in
+                GeometryReader { geo in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        RollingNumberText(
+                            text: calcStore.display,
+                            font: summitNumber(fontSize, weight: .semibold),
+                            color: themeStore.color("text")
+                        )
+                        .lineLimit(1)
+                        .fixedSize()                                         // never shrink
+                        .padding(.leading, 6)                                // minimal scroll headroom
+                        .frame(minWidth: geo.size.width, alignment: .trailing)
+                        .frame(height: geo.size.height, alignment: .bottom)  // sit on the baseline
+                        .id("summitResult")
+                    }
+                    .defaultScrollAnchor(.trailing)
+                    .onChange(of: calcStore.display) { _, _ in
+                        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.18)) {
+                            proxy.scrollTo("summitResult", anchor: .trailing)
+                        }
+                    }
+                }
+                .frame(height: fontSize * 1.15)
+            }
+        }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
     }
 
-    // Fixed-width (110) left stack, top-aligned: calc log above, chord wheel below.
-    // Each element is gated by its own toggle; showLeftColumn removes the whole 110pt
-    // reservation when both are off so the numbers get the full width.
+    // Fixed-width (100) left stack: calc log above, chord strip below. Wrapped in a
+    // scroll view that only scrolls when the content genuinely exceeds the card's
+    // inner height (a short SE card with chords present) — so it can never clip a
+    // strip, and on taller cards it shows everything with no scroll. Each element is
+    // gated by its own toggle; showLeftColumn removes the whole reservation when both
+    // are off so the numbers get the full width.
     private var leftColumn: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            if themeStore.showCalcLog {
-                calcLog
-            }
-            if themeStore.showChordWheel {
-                chordWheel
-            }
-            Spacer(minLength: 0)
-        }
-        .frame(width: 110, alignment: .leading)
-    }
-
-    // Session-only viewer of recently played chords, newest first, in an iOS wheel
-    // picker (the literal number-picker feel). Selection binds to inert local state —
-    // spinning it does nothing yet. A ~90pt window naturally shows ~4 rows at once.
-    @ViewBuilder
-    private var chordWheel: some View {
-        if musicStore.playedChordNames.isEmpty {
-            Text("No chords yet")
-                .font(summitBody(11))
-                .foregroundStyle(themeStore.color("muted"))
-                .frame(width: 110, height: 90, alignment: .topLeading)
-        } else {
-            Picker("", selection: $wheelSelection) {
-                ForEach(Array(musicStore.playedChordNames.enumerated()), id: \.offset) { idx, name in
-                    Text(name)
-                        .font(summitBody(11))
-                        .tag(idx)
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 6) {
+                if themeStore.showCalcLog {
+                    calcLog
+                }
+                if themeStore.showChordWheel {
+                    chordStrip
                 }
             }
-            .pickerStyle(.wheel)
-            .labelsHidden()
-            .frame(width: 110, height: 90)
-            .clipped()
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .frame(width: 54)   // narrow, tucked column; frees width so the result stops clipping
+    }
+
+    // Recently played chords, newest first, as a soft scrollable strip — the
+    // raw iOS wheel picker's grey selection band read as unfinished on the card.
+    // Newest chord is emphasized; the strip scrolls for older ones. Empty until you
+    // play something, so it reserves no awkward box on the calculator screen.
+    @ViewBuilder
+    private var chordStrip: some View {
+        if !musicStore.playedChordNames.isEmpty {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("CHORDS")
+                    .font(summitBody(8, weight: .semibold))
+                    .tracking(0.4)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .foregroundStyle(themeStore.color("muted"))
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        ForEach(Array(musicStore.playedChordNames.prefix(10).enumerated()), id: \.offset) { idx, name in
+                            Text(name)
+                                .font(summitBody(idx == 0 ? 13 : 11, weight: idx == 0 ? .bold : .regular))
+                                .foregroundStyle(idx == 0 ? themeStore.color("primaryStrong") : themeStore.color("muted"))
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(height: 70)
+            }
+            .padding(7)
+            .background(
+                RoundedRectangle(cornerRadius: 10).fill(themeStore.color("surface2"))
+            )
+            // Fills the narrow left column, tucked directly under the history so the
+            // two read as one compact column.
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
     // Left-side running log: last 3 completed calcs, oldest→newest top-to-bottom.
     // Sourced from history (calc entries carry extra["tokens"] + value); tapping a
     // line replays it via the same replayTokens the recycle sheet uses. Fills the
-    // 110pt left column (its parent reserves the width).
+    // 100pt left column (its parent reserves the width).
     private var calcLog: some View {
         let recent = historyStore.entries
             .filter { $0.type == "calc" && !($0.extra["tokens"] ?? "").isEmpty }
@@ -336,6 +387,7 @@ struct CalcView: View {
                     soundEvent: def.event,
                     isAccent: def.accent,
                     isStrong: def.strong,
+                    isPending: calcStore.pendingOpKey == def.key,
                     height: keyHeight
                 ) {
                     calcStore.press(def.key)
