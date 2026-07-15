@@ -58,7 +58,7 @@ struct IncomeCard: View {
             set: { newValue in
                 let wasOn = store.month.inc2On
                 if theme.motionEnabled && !reduceMotion {
-                    withAnimation(.spring(response: 0.42, dampingFraction: 0.72)) {
+                    withAnimation(SummitMotion.springSoft) {
                         store.setInc2On(newValue)
                     }
                 } else {
@@ -75,7 +75,7 @@ struct IncomeCard: View {
     private func incomeRow(_ index: Int) -> some View {
         let inc = store.month.inc[index]
         return VStack(alignment: .leading, spacing: 8) {
-            TextField("Income label", text: labelBinding(index), prompt: Text("Income label").foregroundColor(theme.color("muted")))
+            TextField("Income label", text: labelBinding(index), prompt: Text("Income label").foregroundStyle(theme.color("muted")))
                 .font(summitBody(13, weight: .semibold))
                 .foregroundStyle(theme.color("text"))
             HStack(spacing: 10) {
@@ -99,7 +99,7 @@ struct IncomeCard: View {
             Text(label)
                 .font(summitBody(10, weight: .medium))
                 .foregroundStyle(theme.color("muted"))
-            TextField("0", text: text, prompt: Text("0").foregroundColor(theme.color("muted")))
+            TextField("0", text: text, prompt: Text("0").foregroundStyle(theme.color("muted")))
                 .keyboardType(.decimalPad)
                 .font(summitBody(14))
                 .padding(.horizontal, 10)

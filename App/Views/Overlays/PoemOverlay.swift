@@ -40,7 +40,7 @@ struct PoemOverlay: View {
 
     private func present(_ egg: Egg) {
         showMore = false
-        withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+        withAnimation(SummitMotion.springSoft) {
             isShowing = true
         }
         sound.play("easteregg")

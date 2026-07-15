@@ -4,8 +4,12 @@ set -euo pipefail
 FONTS_DIR="App/Resources/Fonts"
 mkdir -p "$FONTS_DIR"
 
-RAW_BASE="https://raw.githubusercontent.com/google/fonts/main"
-MIRROR_BASE="https://cdn.jsdelivr.net/gh/google/fonts@main"
+# Pinned google/fonts commit (immutable): bump deliberately after verifying filenames
+# still exist at the new SHA. Verified 2026-07-15: archivo, bitter, rye
+# dirs all contain the exact files below at this commit.
+PIN="26c5c976d82d50c24a8f0a7ac455e0a7c639c226"
+RAW_BASE="https://raw.githubusercontent.com/google/fonts/$PIN"
+MIRROR_BASE="https://cdn.jsdelivr.net/gh/google/fonts@$PIN"
 
 FONT_NAMES=(
   "Archivo.ttf"

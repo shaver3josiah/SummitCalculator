@@ -907,6 +907,9 @@ def budget_import_text(t):
         payload = budget_decode_payload(m.group(1))
         if not payload or not payload.get("k") or not payload.get("m") or not payload["m"].get("cats"):
             return None
+        ym = budget_parse_ym(payload["k"])
+        if not ym or not (1 <= ym["month"] <= 12) or len(payload["m"].get("inc", [])) < 2:
+            return None
         return payload
     except Exception:
         return None

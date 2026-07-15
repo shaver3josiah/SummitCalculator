@@ -326,6 +326,8 @@ Vectors: `contracts/vectors.json` and `Packages/BloomCore/Tests/BloomCoreTests/R
 
 ## Contracts v3 (2026-07-08, approved additions and deviations)
 
+> Status, 2026-07-15: the v3 items below are NOT implemented as of Summit v0.1. The five-tab registry, `MoreView`, `ShareCodec`, `FundDefaults`, the `ShopList`/lists migration, and `StoreKey` cases `lists`/`keychords` do not exist in shipped code. The shipped tab registry remains the v2 seven-tab set (`SummitTab`: calc, proj, lists, kitchen, tools, budget, music), and keychords persist via a private raw filename (`"summit_keychords"` in `App/Views/Music/MusicStore.swift`) that bypasses `StoreKey`. The frozen v3 text below is unchanged.
+
 Ten items, confirmed by Josiah 2026-07-08. Decisions D8 through D12 first, then full technical detail for the areas that need it. Where this layer supersedes v1 or v2 text above, the supersession is also marked inline at the point it occurs (the tab registry, the frozen view-name list, and the theme token count).
 
 ### Decision log v3 (2026-07-08)

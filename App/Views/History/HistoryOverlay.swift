@@ -104,7 +104,7 @@ struct HistoryOverlay: View {
             TextField("Search your history", text: Binding(
                 get: { history.searchText },
                 set: { history.searchText = $0 }
-            ), prompt: Text("Search your history").foregroundColor(theme.color("muted")))
+            ), prompt: Text("Search your history").foregroundStyle(theme.color("muted")))
             .font(summitBody(15))
         }
         .padding(12)
@@ -184,7 +184,7 @@ struct HistoryOverlay: View {
                     }
                 } header: {
                     Text(group.label)
-                        .foregroundColor(theme.color("muted"))
+                        .foregroundStyle(theme.color("muted"))
                 }
             }
         }

@@ -14,7 +14,7 @@ final class ToastCenter {
     func show(title: String, message: String) {
         self.title = title
         self.message = message
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+        withAnimation(SummitMotion.springSoft) {
             isShowing = true
         }
         dismissTask?.cancel()
@@ -33,20 +33,21 @@ final class ToastCenter {
 
 struct ToastHost: View {
     @Environment(ThemeStore.self) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var center = ToastCenter.shared
 
     var body: some View {
         VStack {
             if center.isShowing {
                 toastCard
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
                     .onTapGesture { center.dismiss() }
             }
             Spacer()
         }
         .padding(.top, 8)
         .allowsHitTesting(center.isShowing)
-        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: center.isShowing)
+        .animation(reduceMotion ? .default : SummitMotion.springSoft, value: center.isShowing)
     }
 
     private var toastCard: some View {

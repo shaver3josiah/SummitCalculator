@@ -80,7 +80,7 @@ private struct SolverField: View {
             Text(label)
                 .font(summitBody(11, weight: .medium))
                 .foregroundStyle(theme.color("muted"))
-            TextField("", text: $text, prompt: Text("0").foregroundColor(theme.color("muted")))
+            TextField("", text: $text, prompt: Text("0").foregroundStyle(theme.color("muted")))
                 .keyboardType(.numbersAndPunctuation)
                 .font(summitNumber(17))
                 .foregroundStyle(theme.color("text"))

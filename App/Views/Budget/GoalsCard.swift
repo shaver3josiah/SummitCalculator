@@ -52,7 +52,7 @@ struct GoalsCard: View {
                     .foregroundStyle(theme.color("muted"))
             }
             Spacer()
-            TextField(String(Int(BudgetMath.jsRound(entry.sel))), text: goalBinding(entry.index), prompt: Text(String(Int(BudgetMath.jsRound(entry.sel)))).foregroundColor(theme.color("muted")))
+            TextField(String(format: "%.0f", BudgetMath.jsRound(entry.sel)), text: goalBinding(entry.index), prompt: Text(String(format: "%.0f", BudgetMath.jsRound(entry.sel))).foregroundStyle(theme.color("muted")))
                 .keyboardType(.decimalPad)
                 .font(summitBody(13))
                 .frame(width: 70)
@@ -138,7 +138,7 @@ struct GoalsCard: View {
     private func goalBinding(_ index: Int) -> Binding<String> {
         Binding(
             get: {
-                guard let goal = store.month.cats[index].goal else { return "" }
+                guard let goal = store.month.cats[safe: index]?.goal else { return "" }
                 return Formatters.plain(goal)
             },
             set: { newValue in

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct RollingNumberText: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var text: String
     var font: Font
     var color: Color
@@ -9,7 +10,7 @@ struct RollingNumberText: View {
         Text(text)
             .font(font)
             .foregroundStyle(color)
-            .contentTransition(.numericText())
-            .animation(.spring(response: 0.45, dampingFraction: 0.8), value: text)
+            .contentTransition(reduceMotion ? .identity : .numericText())
+            .animation(reduceMotion ? nil : SummitMotion.springSoft, value: text)
     }
 }

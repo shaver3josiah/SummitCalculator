@@ -75,7 +75,9 @@ struct BudgetChart: View {
         .chartYScale(domain: 0...yMax)
         .chartXAxis(.hidden)
         .chartYAxis(.hidden)
+        .accessibilityLabel("Spending pace chart")
+        .accessibilityValue("\(active.count) \(active.count == 1 ? "category" : "categories") paced over \(days) days, \(Formatters.money(aggregateTotal)) at month end")
         .frame(height: 170)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.5), value: active.count)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.5), value: active.map { $0.sel })
     }
 }

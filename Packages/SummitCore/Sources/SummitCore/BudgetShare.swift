@@ -45,7 +45,8 @@ public enum BudgetShare {
         guard let payload = decodePayload(token) else {
             return nil
         }
-        if payload.k.isEmpty || payload.m.cats.isEmpty {
+        guard let ym = BudgetMath.parseYM(payload.k), (1...12).contains(ym.month),
+              payload.m.inc.count >= 2, !payload.m.cats.isEmpty else {
             return nil
         }
         return BudgetDB(v: 2, cur: payload.k, months: [payload.k: payload.m])

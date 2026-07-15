@@ -7,6 +7,7 @@ struct GrowPanel: View {
     @Environment(ProjectionStore.self) private var projectionStore
     @Environment(HistoryStore.self) private var historyStore
     @Environment(SoundStore.self) private var soundStore
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var principalText = "10000"
     @State private var monthlyText = "500"
@@ -128,7 +129,9 @@ struct GrowPanel: View {
         .frame(height: 150)
         .chartXAxis(.hidden)
         .chartYAxis(.hidden)
-        .animation(.easeOut(duration: 0.6), value: yearlyBalances.count)
+        .accessibilityLabel("Projected growth chart")
+        .accessibilityValue("Grows to \(Formatters.money(futureValueResult)) over \(max(yearlyBalances.count - 1, 1)) years")
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.6), value: yearlyBalances.count)
     }
 
     private func calculate() {

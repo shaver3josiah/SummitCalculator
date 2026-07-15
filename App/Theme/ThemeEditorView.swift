@@ -173,13 +173,10 @@ struct ThemeEditorView: View {
 
 extension Color {
     func toHex() -> String? {
-        let uiColor = UIColor(self)
-        guard let components = uiColor.cgColor.components, components.count >= 3 else {
-            return nil
-        }
-        let r = Int(round(components[0] * 255))
-        let g = Int(round(components[1] * 255))
-        let b = Int(round(components[2] * 255))
-        return String(format: "#%02X%02X%02X", r, g, b)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        guard UIColor(self).getRed(&r, green: &g, blue: &b, alpha: &a) else { return nil }
+        // Clamp: extended sRGB (wide-gamut picks) can yield components outside 0...1.
+        func channel(_ v: CGFloat) -> Int { Int((min(max(v, 0), 1) * 255).rounded()) }
+        return String(format: "#%02X%02X%02X", channel(r), channel(g), channel(b))
     }
 }

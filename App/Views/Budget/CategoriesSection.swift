@@ -1,6 +1,15 @@
 import SwiftUI
 import SummitCore
 
+/// Row/category deletion (or a budget import replacing the month) can make SwiftUI
+/// re-evaluate a stale row's binding getter with an out-of-range index — return nil
+/// instead of trapping.
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        indices.contains(index) ? self[index] : nil
+    }
+}
+
 /// A UISwitch has a fixed intrinsic size of 51×31pt — putting `.frame(width: 22)`
 /// on it doesn't shrink it, it just centers the full-size switch in a 22pt slot
 /// so it overflows ~15pt into its neighbors (visibly colliding on small phones).
@@ -149,7 +158,7 @@ struct CategoriesSection: View {
 
             CompactToggle(isOn: catSelectAllBinding(index))
 
-            TextField("Category", text: catNameBinding(index), prompt: Text("Category").foregroundColor(theme.color("muted")))
+            TextField("Category", text: catNameBinding(index), prompt: Text("Category").foregroundStyle(theme.color("muted")))
                 .font(summitBody(15, weight: .semibold))
                 .foregroundStyle(theme.color("text"))
 
@@ -201,11 +210,11 @@ struct CategoriesSection: View {
         HStack(spacing: 8) {
             CompactToggle(isOn: rowSelBinding(categoryIndex, rowIndex))
 
-            TextField("Item", text: rowNameBinding(categoryIndex, rowIndex), prompt: Text("Item").foregroundColor(theme.color("muted")))
+            TextField("Item", text: rowNameBinding(categoryIndex, rowIndex), prompt: Text("Item").foregroundStyle(theme.color("muted")))
                 .font(summitBody(14))
                 .foregroundStyle(theme.color("text"))
 
-            TextField("0", text: rowAmountBinding(categoryIndex, rowIndex), prompt: Text("0").foregroundColor(theme.color("muted")))
+            TextField("0", text: rowAmountBinding(categoryIndex, rowIndex), prompt: Text("0").foregroundStyle(theme.color("muted")))
                 .keyboardType(.decimalPad)
                 .font(summitBody(14))
                 .frame(width: 64)
@@ -242,7 +251,7 @@ struct CategoriesSection: View {
     private func catSelectAllBinding(_ index: Int) -> Binding<Bool> {
         Binding(
             get: {
-                let items = store.month.cats[index].items
+                let items = store.month.cats[safe: index]?.items ?? []
                 return !items.isEmpty && items.allSatisfy { $0.sel }
             },
             set: { store.setCategorySelectAll(index, on: $0) }
@@ -251,28 +260,28 @@ struct CategoriesSection: View {
 
     private func catNameBinding(_ index: Int) -> Binding<String> {
         Binding(
-            get: { store.month.cats[index].n },
+            get: { store.month.cats[safe: index]?.n ?? "" },
             set: { store.renameCategory(index, name: $0) }
         )
     }
 
     private func rowSelBinding(_ categoryIndex: Int, _ rowIndex: Int) -> Binding<Bool> {
         Binding(
-            get: { store.month.cats[categoryIndex].items[rowIndex].sel },
+            get: { store.month.cats[safe: categoryIndex]?.items[safe: rowIndex]?.sel ?? false },
             set: { store.updateRow(category: categoryIndex, row: rowIndex, sel: $0) }
         )
     }
 
     private func rowNameBinding(_ categoryIndex: Int, _ rowIndex: Int) -> Binding<String> {
         Binding(
-            get: { store.month.cats[categoryIndex].items[rowIndex].n },
+            get: { store.month.cats[safe: categoryIndex]?.items[safe: rowIndex]?.n ?? "" },
             set: { store.updateRow(category: categoryIndex, row: rowIndex, name: $0) }
         )
     }
 
     private func rowAmountBinding(_ categoryIndex: Int, _ rowIndex: Int) -> Binding<String> {
         Binding(
-            get: { Formatters.plain(store.month.cats[categoryIndex].items[rowIndex].a) },
+            get: { Formatters.plain(store.month.cats[safe: categoryIndex]?.items[safe: rowIndex]?.a ?? 0) },
             set: { store.updateRow(category: categoryIndex, row: rowIndex, amount: Double($0) ?? 0) }
         )
     }

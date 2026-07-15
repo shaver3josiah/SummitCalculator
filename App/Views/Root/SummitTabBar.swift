@@ -59,13 +59,19 @@ private struct SummitTabButton: View {
         }
         .buttonStyle(.plain)
         .onChange(of: isActive) { _, nowActive in
-            guard nowActive else { return }
-            if outlineVisible { redraw() } else { drawEnd = 1 }
+            if nowActive {
+                if outlineVisible { redraw() } else { drawEnd = 1 }
+                startBreathing()
+            } else {
+                var tx = Transaction()
+                tx.disablesAnimations = true
+                withTransaction(tx) { breathe = false }
+            }
         }
         .onAppear {
-            if isActive { drawEnd = 1 }
-            withAnimation(.easeInOut(duration: SummitMotion.shimmerHalf).repeatForever(autoreverses: true)) {
-                breathe = true
+            if isActive {
+                drawEnd = 1
+                startBreathing()
             }
         }
     }
@@ -94,5 +100,11 @@ private struct SummitTabButton: View {
         guard !reduceMotion else { return }
         drawEnd = 0
         withAnimation(SummitMotion.draw) { drawEnd = 1 }
+    }
+
+    private func startBreathing() {
+        withAnimation(.easeInOut(duration: SummitMotion.shimmerHalf).repeatForever(autoreverses: true)) {
+            breathe = true
+        }
     }
 }

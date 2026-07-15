@@ -41,7 +41,7 @@ struct ListsView: View {
             }
         }
         .alert("Name this list", isPresented: $showNewListPrompt) {
-            TextField("Groceries, a trip, the month", text: $newListTitle, prompt: Text("Groceries, a trip, the month").foregroundColor(theme.color("muted")))
+            TextField("Groceries, a trip, the month", text: $newListTitle, prompt: Text("Groceries, a trip, the month").foregroundStyle(theme.color("muted")))
             Button("Create") {
                 _ = store.createList(title: newListTitle)
                 newListTitle = ""
@@ -175,13 +175,13 @@ struct ListsView: View {
 
     private func addRow(listId: UUID) -> some View {
         HStack(spacing: 8) {
-            TextField("Item", text: $newItemName, prompt: Text("Item").foregroundColor(theme.color("muted")))
+            TextField("Item", text: $newItemName, prompt: Text("Item").foregroundStyle(theme.color("muted")))
                 .font(summitBody(14))
-            TextField("Qty", text: $newItemQty, prompt: Text("Qty").foregroundColor(theme.color("muted")))
+            TextField("Qty", text: $newItemQty, prompt: Text("Qty").foregroundStyle(theme.color("muted")))
                 .keyboardType(.decimalPad)
                 .font(summitBody(14))
                 .frame(width: 44)
-            TextField("Price", text: $newItemPrice, prompt: Text("Price").foregroundColor(theme.color("muted")))
+            TextField("Price", text: $newItemPrice, prompt: Text("Price").foregroundStyle(theme.color("muted")))
                 .keyboardType(.decimalPad)
                 .font(summitBody(14))
                 .frame(width: 60)

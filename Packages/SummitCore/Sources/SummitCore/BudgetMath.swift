@@ -19,8 +19,8 @@ public enum BudgetMath {
     }
 
     public static func takeHome(of m: BudgetMonth) -> Double {
-        var t = netOf(m.inc[0])
-        if m.inc2On {
+        var t = m.inc.first.map(netOf) ?? 0
+        if m.inc2On, m.inc.count > 1 {
             t += netOf(m.inc[1])
         }
         return t
@@ -87,7 +87,7 @@ public enum BudgetMath {
     }
 
     public static func monthLabel(_ ymKey: String) -> String {
-        guard let parsed = parseYM(ymKey) else {
+        guard let parsed = parseYM(ymKey), (1...12).contains(parsed.month) else {
             return ymKey
         }
         let name = BudgetDefaults.monthNames[parsed.month - 1]

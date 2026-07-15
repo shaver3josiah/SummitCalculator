@@ -40,15 +40,15 @@ struct RecipeWritePanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            TextField("Recipe name", text: $name, prompt: Text("Recipe name").foregroundColor(theme.color("muted")))
+            TextField("Recipe name", text: $name, prompt: Text("Recipe name").foregroundStyle(theme.color("muted")))
                 .font(summitBody(15))
                 .foregroundStyle(theme.color("text"))
                 .padding(10)
                 .background(RoundedRectangle(cornerRadius: 10).fill(theme.color("surface")))
 
             HStack {
-                TextField("Serves 4", text: $serves, prompt: Text("Serves 4").foregroundColor(theme.color("muted")))
-                TextField("45 min", text: $time, prompt: Text("45 min").foregroundColor(theme.color("muted")))
+                TextField("Serves 4", text: $serves, prompt: Text("Serves 4").foregroundStyle(theme.color("muted")))
+                TextField("45 min", text: $time, prompt: Text("45 min").foregroundStyle(theme.color("muted")))
             }
             .font(summitBody(14))
             .foregroundStyle(theme.color("text"))
@@ -75,7 +75,7 @@ struct RecipeWritePanel: View {
                 .font(summitBody(13, weight: .medium))
                 .foregroundStyle(theme.color("primaryStrong"))
 
-            TextField("Notes (storage, swaps, a little love note...)", text: $notes, prompt: Text("Notes (storage, swaps, a little love note...)").foregroundColor(theme.color("muted")), axis: .vertical)
+            TextField("Notes (storage, swaps, a little love note...)", text: $notes, prompt: Text("Notes (storage, swaps, a little love note...)").foregroundStyle(theme.color("muted")), axis: .vertical)
                 .font(summitBody(14))
                 .foregroundStyle(theme.color("text"))
                 .padding(10)
@@ -165,7 +165,7 @@ struct RecipeWritePanel: View {
 
     private func editableRow(text: Binding<String>, placeholder: String, onDelete: @escaping () -> Void) -> some View {
         HStack {
-            TextField(placeholder, text: text, prompt: Text(placeholder).foregroundColor(theme.color("muted")))
+            TextField(placeholder, text: text, prompt: Text(placeholder).foregroundStyle(theme.color("muted")))
                 .font(summitBody(14))
                 .foregroundStyle(theme.color("text"))
             Button(action: onDelete) {

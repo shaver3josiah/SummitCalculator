@@ -14,7 +14,7 @@ struct RecipeSharePanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            TextField("Paste the recipe link", text: $rawUrl, prompt: Text("Paste the recipe link").foregroundColor(theme.color("muted")))
+            TextField("Paste the recipe link", text: $rawUrl, prompt: Text("Paste the recipe link").foregroundStyle(theme.color("muted")))
                 .font(summitBody(14))
                 .foregroundStyle(theme.color("text"))
                 .keyboardType(.URL)
@@ -23,7 +23,7 @@ struct RecipeSharePanel: View {
                 .background(RoundedRectangle(cornerRadius: 10).fill(theme.color("surface")))
 
             HStack {
-                TextField("Name this QR (e.g. Blueberry_Muffins)", text: $alias, prompt: Text("Name this QR (e.g. Blueberry_Muffins)").foregroundColor(theme.color("muted")))
+                TextField("Name this QR (e.g. Blueberry_Muffins)", text: $alias, prompt: Text("Name this QR (e.g. Blueberry_Muffins)").foregroundStyle(theme.color("muted")))
                     .font(summitBody(13))
                     .foregroundStyle(theme.color("text"))
                 Button("Make QR") {

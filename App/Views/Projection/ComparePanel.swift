@@ -7,6 +7,7 @@ struct ComparePanel: View {
     @Environment(ProjectionStore.self) private var projectionStore
     @Environment(HistoryStore.self) private var historyStore
     @Environment(SoundStore.self) private var soundStore
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var monthlyText = "500"
     @State private var yearsText = "20"
@@ -45,7 +46,9 @@ struct ComparePanel: View {
         .frame(height: 170)
         .chartXAxis(.hidden)
         .chartYAxis(.hidden)
-        .animation(.easeOut(duration: 0.6), value: series.count)
+        .accessibilityLabel("Fund comparison chart")
+        .accessibilityValue(series.map { "\($0.name) ends at \(Formatters.money($0.finalBalance))" }.joined(separator: ", "))
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.6), value: series.count)
     }
 
     private var chartColors: [Color] {
@@ -72,7 +75,7 @@ struct ComparePanel: View {
         let monthly = Double(monthlyText) ?? 0
         let years = Double(yearsText) ?? 0
         let start = Double(startText) ?? 0
-        let totalYears = max(Int(years), 1)
+        let totalYears = years.isFinite ? Int(min(max(years, 1), 100)) : 1  // ponytail: clamp free-text years; NaN guard because Double("nan") parses
 
         series = projectionStore.funds.map { fund in
             var points: [FundPoint] = []

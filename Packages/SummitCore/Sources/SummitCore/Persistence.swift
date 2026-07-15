@@ -55,7 +55,11 @@ public final class JSONStore: @unchecked Sendable {
             guard let data = try? JSONEncoder().encode(value) else {
                 return
             }
-            try? data.write(to: url, options: .atomic)
+            do {
+                try data.write(to: url, options: .atomic)
+            } catch {
+                assertionFailure("JSONStore write failed for \(key.rawValue): \(error)")
+            }
         }
     }
 
