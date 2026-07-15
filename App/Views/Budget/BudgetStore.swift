@@ -7,16 +7,27 @@ final class BudgetStore {
     var view: String = "month"
     var yearSel: Int
 
+    // Global "give first" prefs — NOT per-month budget data, so they live in their
+    // own file (.stewardship) rather than inside BudgetMonth. Absent file → defaults.
+    var stewardship: StewardshipSettings {
+        didSet { JSONStore.shared.set(.stewardship, stewardship) }
+    }
+
+    // Persisted YYYY-MM keys are Gregorian by schema contract (BudgetMath.monthDays
+    // pins .gregorian), so never derive them from the user's Calendar.current.
+    private static let gregorian = Calendar(identifier: .gregorian)
+
     init() {
         let initialDB: BudgetDB
         if let saved = JSONStore.shared.get(.budget2, as: BudgetDB.self), !saved.months.isEmpty, saved.months[saved.cur] != nil {
             initialDB = saved
         } else {
-            let key = BudgetMath.ymKey(year: Calendar.current.component(.year, from: Date()), month: Calendar.current.component(.month, from: Date()))
+            let key = BudgetMath.ymKey(year: Self.gregorian.component(.year, from: Date()), month: Self.gregorian.component(.month, from: Date()))
             initialDB = BudgetDB(v: 2, cur: key, months: [key: BudgetDefaults.month()])
         }
         db = initialDB
-        yearSel = BudgetMath.parseYM(initialDB.cur)?.year ?? Calendar.current.component(.year, from: Date())
+        yearSel = BudgetMath.parseYM(initialDB.cur)?.year ?? Self.gregorian.component(.year, from: Date())
+        stewardship = JSONStore.shared.get(.stewardship, as: StewardshipSettings.self) ?? StewardshipSettings()
     }
 
     var month: BudgetMonth {
@@ -24,17 +35,35 @@ final class BudgetStore {
         set { db.months[db.cur] = newValue }
     }
 
+    // MARK: - Give-first amounts (pure derived off `month` gross + `stewardship`).
+
+    /// Gross this month = income 1 + income 2 (only when the second is on).
+    /// Guards the inc array so a malformed/short month can't crash.
+    var grossIncome: Double {
+        let m = month
+        let first = m.inc.indices.contains(0) ? m.inc[0].gross : 0
+        let second = (m.inc2On && m.inc.indices.contains(1)) ? m.inc[1].gross : 0
+        return first + second
+    }
+    var titheAmount: Double { grossIncome * stewardship.tithePct / 100 }
+    var feastAmount: Double { grossIncome * stewardship.feastPct / 100 }
+    var poorAmount: Double { grossIncome * stewardship.poorPct / 100 }
+    var innovationAmount: Double { stewardship.innovationFlat }
+    var givenFirstTotal: Double { titheAmount + feastAmount + poorAmount + innovationAmount }
+
     var monthLabel: String { BudgetMath.monthLabel(db.cur) }
     var takeHome: Double { BudgetMath.takeHome(of: month) }
     var planned: Double { BudgetMath.planned(of: month) }
     var leftOver: Double { takeHome - planned }
-    var monthDays: Int { BudgetMath.monthDays(db.cur) }
+    // BudgetMath.monthDays returns 0 on a corrupt key; clamp so chart domains and
+    // per-day division never see 0.
+    var monthDays: Int { max(1, BudgetMath.monthDays(db.cur)) }
     var isCurrentRealMonth: Bool {
-        db.cur == BudgetMath.ymKey(year: Calendar.current.component(.year, from: Date()), month: Calendar.current.component(.month, from: Date()))
+        db.cur == BudgetMath.ymKey(year: Self.gregorian.component(.year, from: Date()), month: Self.gregorian.component(.month, from: Date()))
     }
     var todayDay: Int? {
         guard isCurrentRealMonth else { return nil }
-        return Calendar.current.component(.day, from: Date())
+        return Self.gregorian.component(.day, from: Date())
     }
 
     func switchMonth(to key: String) {

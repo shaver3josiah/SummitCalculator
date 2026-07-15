@@ -20,6 +20,10 @@ struct VisualizePanel: View {
     @State private var placements: [Placement] = []
     @FocusState private var textFocused: Bool
 
+    @State private var addedFlash = false   // "Added!" confirmation pulse on the shopping-list button
+    @State private var flashGeneration = 0   // invalidates a pending flash reset when re-tapped
+    @State private var addBurst = 0          // fires a leaf burst from the button
+
     // Pinch-zoom / pan state for the countertop. `*Base` hold the value committed
     // at the end of the last gesture so the next one composes on top of it.
     @State private var zoom: CGFloat = 1
@@ -43,7 +47,7 @@ struct VisualizePanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            TextField("Paste recipe text", text: $rawText, prompt: Text("Paste recipe text").foregroundColor(theme.color("muted")), axis: .vertical)
+            TextField("Paste recipe text", text: $rawText, prompt: Text("Paste recipe text").foregroundStyle(theme.color("muted")), axis: .vertical)
                 .font(summitBody(14))
                 .foregroundStyle(theme.color("text"))
                 .lineLimit(4...8)
@@ -70,11 +74,31 @@ struct VisualizePanel: View {
             countertop
 
             if !parsed.isEmpty || !failed.isEmpty {
-                Button("Add to shopping list") {
-                    addAllToList()
+                Button {
+                    addAllToList()   // plays the success sound
+                    flashAdded()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: addedFlash ? "checkmark.circle.fill" : "cart.badge.plus")
+                        Text(addedFlash ? "Added!" : "Add to shopping list")
+                    }
+                    .font(summitBody(13, weight: .semibold))
+                    .foregroundStyle(addedFlash ? .white : theme.color("primaryStrong"))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 9)
+                    .background(
+                        Capsule().fill(addedFlash ? theme.color("primaryStrong") : theme.color("surfaceSoft"))
+                    )
+                    .scaleEffect(addedFlash ? 1.05 : 1.0)
+                    .contentShape(Capsule())
                 }
-                .font(summitBody(13, weight: .semibold))
-                .foregroundStyle(theme.color("primaryStrong"))
+                .buttonStyle(.plain)
+                .overlay {
+                    if theme.leavesOn {
+                        LeafBurstView(trigger: addBurst, originX: 0.5, originY: 0.5)
+                            .allowsHitTesting(false)
+                    }
+                }
             }
         }
         .padding(16)
@@ -104,7 +128,7 @@ struct VisualizePanel: View {
                 }
                 .buttonStyle(.plain)
             }
-            TextField("custom", text: $customScale, prompt: Text("custom").foregroundColor(theme.color("muted")))
+            TextField("custom", text: $customScale, prompt: Text("custom").foregroundStyle(theme.color("muted")))
                 .keyboardType(.decimalPad)
                 .font(summitBody(13))
                 .foregroundStyle(theme.color("text"))
@@ -365,7 +389,7 @@ struct VisualizePanel: View {
 
     private func resetZoom() {
         if theme.motionEnabled && !reduceMotion {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+            withAnimation(SummitMotion.springSoft) {
                 zoom = 1; zoomBase = 1; pan = .zero; panBase = .zero
             }
         } else {
@@ -566,6 +590,27 @@ struct VisualizePanel: View {
             lists.addIngredient(name: line, qty: 1)
         }
         sound.play("success")
+    }
+
+    /// Confirmation flourish for the shopping-list button: a spring pop to "Added!"
+    /// plus a leaf burst, settling back after ~1.4s. Respects the motion gates.
+    private func flashAdded() {
+        addBurst += 1   // LeafBurstView is gated on leavesOn at the call site
+        flashGeneration += 1
+        let expected = flashGeneration
+        if theme.motionEnabled && !reduceMotion {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) { addedFlash = true }
+        } else {
+            addedFlash = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+            guard flashGeneration == expected else { return }
+            if theme.motionEnabled && !reduceMotion {
+                withAnimation(.easeOut(duration: 0.3)) { addedFlash = false }
+            } else {
+                addedFlash = false
+            }
+        }
     }
 
     private func foldedIngredientName(_ ing: ParsedIngredient) -> String {

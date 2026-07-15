@@ -51,6 +51,7 @@ struct BudgetView: View {
                 } else {
                     YearWrap()
                 }
+                PrincipalVsRothSection()
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)
