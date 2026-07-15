@@ -8,7 +8,8 @@ struct KeypadButton: View {
     var soundEvent: String
     var isAccent: Bool = false
     var isStrong: Bool = false
-    var height: CGFloat = 58
+    var isPending: Bool = false   // queued operator: invert to the strong style until next digit
+    var height: CGFloat = 58   // compresses on small phones so the grid never clips
     var action: () -> Void
 
     @State private var isPressed = false
@@ -55,13 +56,13 @@ struct KeypadButton: View {
     }
 
     private var backgroundColor: Color {
-        if isStrong { return themeStore.color("primaryStrong") }
+        if isStrong || isPending { return themeStore.color("primaryStrong") }
         if isAccent { return themeStore.color("surface2") }
         return themeStore.color("surfaceSoft")
     }
 
     private var labelColor: Color {
-        if isStrong { return .white }
+        if isStrong || isPending { return .white }
         return themeStore.color("text")
     }
 }

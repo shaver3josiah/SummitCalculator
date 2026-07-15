@@ -37,6 +37,18 @@ final class CalcStore {
     var angleMode: AngleMode = .radians
 
     private var engine = CalcEngine()
+
+    /// Key string of the queued operator (matches press()'s keys) so a keypad button
+    /// can compare against its own key; nil once a digit is typed.
+    var pendingOpKey: String? {
+        switch engine.pendingOp {
+        case .add: "+"
+        case .subtract: "-"
+        case .multiply: "*"
+        case .divide: "/"
+        case nil: nil
+        }
+    }
     private var sequence: [String] = []
     private var muted = false   // silences key sounds during programmatic replay
     private weak var history: HistoryStore?
@@ -133,16 +145,6 @@ final class CalcStore {
             emit("memory")
         default:
             break
-        }
-    }
-
-    func recycle(tokens: [String]) {
-        muted = true
-        defer { muted = false }
-        engine.clearAll()
-        sequence.removeAll()
-        for token in tokens {
-            press(token)
         }
     }
 

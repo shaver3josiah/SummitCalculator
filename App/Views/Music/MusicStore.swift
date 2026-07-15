@@ -22,6 +22,15 @@ final class MusicStore {
         didSet { persistKeyChords() }
     }
 
+    // Chord loudness multiplier (0.5…1.8, default 1.4 = +40%). Routed to the synth's
+    // mixer: min(1.0, 0.6 × chordVolume). See MusicSynth.setVolume.
+    var chordVolume: Double = 1.4 {
+        didSet {
+            synth.setVolume(Float(chordVolume))
+            persistKeyChords()
+        }
+    }
+
     static let samples: [(String, String)] = [
         ("pop", "C G Am F"),
         ("campfire", "G D Em C"),
@@ -39,20 +48,25 @@ final class MusicStore {
         var on: Bool
         var text: String
         var cycle: Bool?
+        var volume: Double?   // optional → old files without it decode to nil (default 1.4)
     }
 
     init() {
-        guard let persisted = Self.loadPersistedKeyChords() else { return }
-        if persisted.on, !persisted.text.isEmpty {
-            chordText = persisted.text
-            cycleOnTabSwitch = persisted.cycle ?? false
-            loadChords()
-            if !chords.isEmpty {
-                playOnKeys = true
+        if let persisted = Self.loadPersistedKeyChords() {
+            chordVolume = persisted.volume ?? 1.4
+            if persisted.on, !persisted.text.isEmpty {
+                chordText = persisted.text
+                cycleOnTabSwitch = persisted.cycle ?? false
+                loadChords()
+                if !chords.isEmpty {
+                    playOnKeys = true
+                }
+            } else {
+                cycleOnTabSwitch = persisted.cycle ?? false
             }
-        } else {
-            cycleOnTabSwitch = persisted.cycle ?? false
         }
+        // didSet doesn't fire for in-init assignment, so push the (possibly default) volume once.
+        synth.setVolume(Float(chordVolume))
     }
 
     func loadChords() {
@@ -148,7 +162,7 @@ final class MusicStore {
     }
 
     private func persistKeyChords() {
-        let payload = KeyChordsPersist(on: playOnKeys, text: chordText, cycle: cycleOnTabSwitch)
+        let payload = KeyChordsPersist(on: playOnKeys, text: chordText, cycle: cycleOnTabSwitch, volume: chordVolume)
         guard let data = try? JSONEncoder().encode(payload) else { return }
         try? data.write(to: Self.keyChordsFileURL(), options: .atomic)
     }

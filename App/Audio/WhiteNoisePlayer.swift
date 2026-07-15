@@ -36,6 +36,7 @@ final class WhiteNoisePlayer: @unchecked Sendable {
     private static let fadeOut: TimeInterval = 2.0
 
     private var interruptionObserver: NSObjectProtocol?
+    private var configChangeObserver: NSObjectProtocol?
 
     private init() {
         // Block-based observer (this is a plain Swift class, so no @objc/#selector).
@@ -47,6 +48,16 @@ final class WhiteNoisePlayer: @unchecked Sendable {
                   let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
                   AVAudioSession.InterruptionType(rawValue: raw) == .began else { return }
             // Phone call etc. — stop cleanly (already on main). No auto-resume: minimal.
+            self.stop()
+        }
+
+        // A route change (headphones unplugged etc.) stops AVAudioEngine on its
+        // own while isPlaying stays true — clear the cue instead of showing it
+        // over silence. Same no-auto-resume policy as interruptions.
+        configChangeObserver = NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main
+        ) { [weak self] _ in
+            guard let self, self.isPlaying else { return }
             self.stop()
         }
 

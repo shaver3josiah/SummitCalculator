@@ -10,6 +10,8 @@ final class MusicSynth: @unchecked Sendable {
     private let mixer = AVAudioMixerNode()
     private let reverb = AVAudioUnitReverb()
     private var sourceNode: AVAudioSourceNode?
+    // Effective mixer output; MusicStore drives it via setVolume (0.6 × chordVolume, capped 1.0).
+    private var mixerVolume: Float = 0.6
     private var configured = false
 
     private struct Voice {
@@ -55,7 +57,7 @@ final class MusicSynth: @unchecked Sendable {
             engine.connect(node, to: mixer, format: format)
             engine.connect(mixer, to: reverb, format: format)
             engine.connect(reverb, to: engine.mainMixerNode, format: format)
-            mixer.outputVolume = 0.6
+            mixer.outputVolume = mixerVolume
             configured = true
         }
         guard !engine.isRunning else { return }
@@ -68,6 +70,15 @@ final class MusicSynth: @unchecked Sendable {
         } catch {
             engine.stop()
         }
+    }
+
+    /// Chord loudness. `multiplier` is MusicStore.chordVolume (~0.5…1.8);
+    /// mixer output = min(1.0, 0.6 × multiplier), so 1.4 → 0.84 and 1.8 → 1.0 (ceiling).
+    /// Safe before the engine is configured — the value is cached and applied on start().
+    func setVolume(_ multiplier: Float) {
+        let v = min(1.0, 0.6 * max(0, multiplier))
+        mixerVolume = v
+        if configured { mixer.outputVolume = v }
     }
 
     func playChord(midiNotes: [Int], strum: Bool, duration: Double) {
@@ -138,7 +149,9 @@ final class MusicSynth: @unchecked Sendable {
                     let phase = 2.0 * Double.pi * voice.frequency * Double(n) * (age)
                     harmonicSum += sin(phase) * amp
                 }
-                mixSample += harmonicSum * envelope * voice.velocity * 0.12
+                // 0.16 render scale: sustained 3-4 note chords peak well under the ±1.0
+                // clamp; only rare dense simultaneous attacks touch it (soft limit, no wrap).
+                mixSample += harmonicSum * envelope * voice.velocity * 0.16
             }
 
             let clamped = max(-1.0, min(1.0, mixSample))

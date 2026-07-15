@@ -24,6 +24,18 @@ final class SoundPlayer: @unchecked Sendable {
         resolveURLs()
         // Purge decoded players under memory pressure; they rebuild on next play().
         MemoryPressure.onWarning { [weak self] in self?.players.removeAll() }
+        // After a media-services daemon reset every cached AVAudioPlayer is dead
+        // and the session config is gone: drop the players (they rebuild on next
+        // play(), same as the memory-warning path) and reconfigure the session.
+        // Singleton lives for the app's lifetime, so we never remove the observer.
+        _ = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.mediaServicesWereResetNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            self.players.removeAll()
+            self.sessionConfigured = false
+            self.configureSession()
+        }
     }
 
     private func configureSession() {
