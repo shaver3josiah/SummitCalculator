@@ -127,6 +127,10 @@ public struct CalcEngine: Sendable {
         return parts.isEmpty ? "" : parts.joined(separator: " ")
     }
 
+    // Pending = operator pressed, waiting for the next operand (overwrite still true).
+    // Typing a digit sets overwrite=false, so this returns nil and the highlight clears.
+    public var pendingOp: CalcOp? { overwrite ? op : nil }
+
     private static func compute(_ a: Double, _ b: Double, _ op: CalcOp) -> Double {
         switch op {
         case .add:

@@ -17,6 +17,7 @@ public enum StoreKey: String, CaseIterable, Sendable {
     case counterTop = "summit_countertop"
     case calcLog = "summit_calclog"
     case chordWheel = "summit_chordwheel"
+    case stewardship = "summit_stewardship"
 }
 
 public final class JSONStore: @unchecked Sendable {
@@ -36,7 +37,15 @@ public final class JSONStore: @unchecked Sendable {
             guard let data = try? Data(contentsOf: url) else {
                 return nil
             }
-            return try? JSONDecoder().decode(T.self, from: data)
+            do {
+                return try JSONDecoder().decode(T.self, from: data)
+            } catch {
+                // Preserve the unreadable file so the next save can't overwrite the evidence.
+                let aside = url.appendingPathExtension("corrupt")
+                try? FileManager.default.removeItem(at: aside)
+                try? FileManager.default.moveItem(at: url, to: aside)
+                return nil
+            }
         }
     }
 
