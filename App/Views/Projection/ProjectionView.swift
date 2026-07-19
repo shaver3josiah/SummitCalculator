@@ -5,7 +5,7 @@ struct ProjectionView: View {
     @Environment(ThemeStore.self) private var themeStore
     @State private var selectedPanel = "Grow"
 
-    private let panels = ["Grow", "Retire", "Match", "Real rate", "Compare", "Rule of 72", "Beat market"]
+    private let panels = ["Grow", "Baby", "Trump", "Whole life", "Retire", "Match", "Real rate", "Compare", "Rule of 72", "Beat market"]
 
     var body: some View {
         ScrollView {
@@ -24,6 +24,12 @@ struct ProjectionView: View {
         switch selectedPanel {
         case "Grow":
             GrowPanel()
+        case "Baby":
+            BabyPanel()
+        case "Trump":
+            TrumpPanel()
+        case "Whole life":
+            WholeLifePanel()
         case "Retire":
             RetirePanel()
         case "Match":

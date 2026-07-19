@@ -15,20 +15,26 @@ struct ListsView: View {
     @State private var editingRow: ShopListRow?
     @State private var editingListId: UUID?
 
+    /// "list" / "notes" / "archive".
+    @State private var mode = "list"
+    /// True while she's typing in the notes editor — hides the tab bar.
+    @State private var composing = false
+
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                listPicker
-                if let list = store.activeList {
-                    listCard(list)
-                } else {
-                    emptyState
-                }
+        VStack(spacing: 0) {
+            if !composing {
+                KTabBar(items: ["Lists", "Notes", "Archive"], selection: modeBinding)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 12)
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
-            .padding(16)
+            content
         }
         .background(theme.color("bg"))
-        .scrollDismissesKeyboard(.interactively)
+        .onChange(of: mode) { _, newMode in
+            if newMode != "notes" { composing = false }
+        }
         .sheet(item: $editingRow) { row in
             EditListItemSheet(row: row) { updated in
                 if let listId = editingListId {
@@ -48,6 +54,52 @@ struct ListsView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch mode {
+        case "notes":
+            NotesEditorView(composing: $composing)
+        case "archive":
+            ScrollView {
+                NotesArchiveView(mode: $mode)
+                    .padding(16)
+            }
+            .scrollDismissesKeyboard(.interactively)
+        default:
+            ScrollView {
+                VStack(spacing: 16) {
+                    listPicker
+                    if let list = store.activeList {
+                        listCard(list)
+                    } else {
+                        emptyState
+                    }
+                }
+                .padding(16)
+            }
+            .scrollDismissesKeyboard(.interactively)
+        }
+    }
+
+    private var modeBinding: Binding<String> {
+        Binding(
+            get: {
+                switch mode {
+                case "notes": return "Notes"
+                case "archive": return "Archive"
+                default: return "Lists"
+                }
+            },
+            set: {
+                switch $0 {
+                case "Notes": mode = "notes"
+                case "Archive": mode = "archive"
+                default: mode = "list"
+                }
+            }
+        )
     }
 
     private var listPicker: some View {
@@ -104,14 +156,23 @@ struct ListsView: View {
             }
             addRow(listId: list.id)
             totalsBar(list)
-            HStack {
+            HStack(spacing: 14) {
                 Button("Delete list") {
                     store.deleteList(list.id)
                 }
                 .font(summitBody(13))
                 .foregroundStyle(theme.color("muted"))
+
+                ShareLink(item: listShareText(list)) {
+                    Label("Share", systemImage: "square.and.arrow.up")
+                        .font(summitBody(13, weight: .semibold))
+                        .foregroundStyle(theme.color("primaryStrong"))
+                }
+                .disabled(list.rows.isEmpty)
+                .opacity(list.rows.isEmpty ? 0.4 : 1)
+
                 Spacer()
-                Button("Log total to history") {
+                Button("Log total") {
                     store.logTotalToHistory(listId: list.id, history: history)
                     sound.play("success")
                 }
@@ -124,6 +185,22 @@ struct ListsView: View {
             RoundedRectangle(cornerRadius: theme.radius)
                 .fill(theme.color("surface"))
         )
+    }
+
+    /// Plain-text version of a list she can drop into a message.
+    private func listShareText(_ list: ShopList) -> String {
+        var lines = [list.title.isEmpty ? "List" : list.title, ""]
+        for row in list.rows {
+            let check = row.checked ? "✓ " : "• "
+            if row.qty != 1 || row.unitPrice != 0 {
+                lines.append("\(check)\(row.name) — \(Formatters.plain(row.qty)) × \(Formatters.money(row.unitPrice)) = \(Formatters.money(row.lineTotal))")
+            } else {
+                lines.append("\(check)\(row.name)")
+            }
+        }
+        lines.append("")
+        lines.append("Total: \(Formatters.money(list.total))")
+        return lines.joined(separator: "\n")
     }
 
     private func rowView(listId: UUID, row: ShopListRow) -> some View {

@@ -18,6 +18,9 @@ public enum StoreKey: String, CaseIterable, Sendable {
     case calcLog = "summit_calclog"
     case chordWheel = "summit_chordwheel"
     case stewardship = "summit_stewardship"
+    case calcDecimals = "summit_calcdecimals"
+    case notesArchive = "summit_notesarchive"
+    case notesDraft = "summit_notesdraft"
 }
 
 public final class JSONStore: @unchecked Sendable {

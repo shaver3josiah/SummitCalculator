@@ -9,6 +9,7 @@ struct ToolsView: View {
                 PercentageCard()
                 LoanPaymentCard()
                 SavingsGoalCard()
+                RealEstateCard()
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)

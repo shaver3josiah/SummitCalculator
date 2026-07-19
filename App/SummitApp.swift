@@ -12,6 +12,8 @@ struct SummitApp: App {
     @State private var calcStore: CalcStore
     @State private var projectionStore = ProjectionStore()
     @State private var budgetStore = BudgetStore()
+    @State private var notesArchive = NotesArchiveStore()
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         let history = HistoryStore()
@@ -41,6 +43,12 @@ struct SummitApp: App {
                 .environment(calcStore)
                 .environment(projectionStore)
                 .environment(budgetStore)
+                .environment(notesArchive)
+                // Leaving the app is the last guaranteed moment to write the
+                // in-progress note down; the debounce may still be pending.
+                .onChange(of: scenePhase) { _, phase in
+                    if phase != .active { notesArchive.flushDraft() }
+                }
         }
     }
 }

@@ -4,6 +4,7 @@ import SummitCore
 
 struct ThemeEditorView: View {
     @Environment(ThemeStore.self) private var themeStore
+    @Environment(CalcStore.self) private var calcStore
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -35,17 +36,44 @@ struct ThemeEditorView: View {
                 .font(summitBody(13, weight: .semibold))
                 .foregroundStyle(themeStore.color("muted"))
                 .textCase(.uppercase)
-            Toggle(isOn: Binding(get: { themeStore.showTabLabels }, set: { themeStore.showTabLabels = $0 })) {
-                Text("Show tab labels")
-                    .font(summitBody(14))
-                    .foregroundStyle(themeStore.color("text"))
+            VStack(spacing: 0) {
+                Toggle(isOn: Binding(get: { themeStore.showTabLabels }, set: { themeStore.showTabLabels = $0 })) {
+                    Text("Show tab labels")
+                        .font(summitBody(14))
+                        .foregroundStyle(themeStore.color("text"))
+                }
+                .tint(themeStore.color("primaryStrong"))
+                .padding(.vertical, 10)
+                Divider().overlay(themeStore.color("line"))
+                decimalsRow
             }
-            .tint(themeStore.color("primaryStrong"))
             .padding(.horizontal, 14)
-            .padding(.vertical, 6)
             .background(themeStore.color("surface"))
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
+    }
+
+    // The same setting the calculator's swipe-up/down changes, given a home in the
+    // menu so it's discoverable without knowing the gesture exists.
+    private var decimalsRow: some View {
+        Stepper(
+            value: Binding(
+                get: { calcStore.decimals },
+                set: { calcStore.decimals = min(8, max(0, $0)) }
+            ),
+            in: 0...8
+        ) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Calculator decimals: \(calcStore.decimals)")
+                    .font(summitBody(14))
+                    .foregroundStyle(themeStore.color("text"))
+                Text("Or swipe the result up for more, down for fewer.")
+                    .font(summitBody(11))
+                    .foregroundStyle(themeStore.color("muted"))
+            }
+        }
+        .tint(themeStore.color("primaryStrong"))
+        .padding(.vertical, 8)
     }
 
     private var motionSection: some View {

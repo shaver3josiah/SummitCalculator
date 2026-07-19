@@ -23,6 +23,26 @@ public enum Formatters {
         return fmtGrouped(r)
     }
 
+    /// Like `fmt`, but rounds to a chosen number of decimal places (0…8) before
+    /// grouping. Trailing zeros are trimmed, so 1/3 at 3 places is "0.333" and an
+    /// integer result stays clean. Drives the calculator's decimal-swipe / setting.
+    public static func fmt(_ n: Double, decimals: Int) -> String {
+        if n.isNaN || n.isInfinite {
+            return "Error"
+        }
+        if n == 0 {
+            return "0"
+        }
+        let absN = abs(n)
+        if absN >= 1e15 || (absN < 1e-6 && absN > 0) {
+            return toExponential4(n)
+        }
+        let d = min(8, max(0, decimals))
+        let p = pow(10.0, Double(d))
+        let rounded = (n * p).rounded() / p
+        return fmtGrouped(rounded)
+    }
+
     public static func plain(_ n: Double) -> String {
         return numberToString(round8(n))
     }

@@ -122,6 +122,7 @@ struct CalcView: View {
                     .allowsHitTesting(false)
             }
         }
+        .decimalSwipe()
     }
 
     // Right side of the card: a slim live-expression line up top (the one thing the
@@ -404,4 +405,76 @@ private struct KeyDef: Identifiable {
     var accent: Bool = false
     var strong: Bool = false
     var id: String { key + label }
+}
+
+/// Swipe the display up/down to show more/fewer decimals — one step per ~44pt, so
+/// one long swipe can travel several places. It rides on the CARD as a simultaneous
+/// gesture, never inside the result's horizontal ScrollView: the tape still scrolls
+/// a long number within its own bounds, and this only reads the drag alongside it.
+struct DecimalSwipeModifier: ViewModifier {
+    @Environment(ThemeStore.self) private var theme
+    @Environment(CalcStore.self) private var calc
+    @Environment(SoundStore.self) private var sound
+
+    /// Travel already spent on steps — subtracted from the drag so the gesture keeps
+    /// stepping instead of firing once and latching.
+    @State private var spent: CGFloat = 0
+    @State private var tick = 0
+    @State private var hint: String?
+    @State private var hintEpoch = 0
+
+    private static let travelPerStep: CGFloat = 44
+
+    func body(content: Content) -> some View {
+        content
+            // Bottom-LEADING: the number is right-aligned, so this is the one corner
+            // of the card the digits never reach.
+            .overlay(alignment: .bottomLeading) {
+                if let hint {
+                    Text(hint)
+                        .font(summitBody(9))
+                        .foregroundStyle(theme.color("muted"))
+                        .padding(.leading, 18)
+                        .padding(.bottom, 4)
+                        .transition(.opacity)
+                        .allowsHitTesting(false)
+                }
+            }
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 24)
+                    .onChanged { value in
+                        // Up = more places, down = fewer, so it never collides with
+                        // the long-result horizontal scroll inside the same card.
+                        let steps = Int((-value.translation.height - spent) / Self.travelPerStep)
+                        guard steps != 0 else { return }
+                        spent += CGFloat(steps) * Self.travelPerStep
+                        let before = calc.decimals
+                        calc.nudgeDecimals(steps)
+                        guard calc.decimals != before else { return }   // silent at the 0/8 ends
+                        tick &+= 1
+                        flashHint()
+                    }
+                    .onEnded { _ in spent = 0 }
+            )
+            .sensoryFeedback(.selection, trigger: tick) { _, _ in sound.hapticsEnabled }
+    }
+
+    private func flashHint() {
+        hintEpoch &+= 1
+        let epoch = hintEpoch
+        let places = calc.decimals
+        withAnimation(.easeOut(duration: 0.2)) {
+            hint = places == 1 ? "1 decimal" : "\(places) decimals"
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            guard epoch == hintEpoch else { return }   // a newer step owns the hint now
+            withAnimation(.easeOut(duration: 0.2)) { hint = nil }
+        }
+    }
+}
+
+extension View {
+    func decimalSwipe() -> some View {
+        modifier(DecimalSwipeModifier())
+    }
 }
