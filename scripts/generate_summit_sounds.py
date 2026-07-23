@@ -93,6 +93,14 @@ def reverb(sig, wet, decay):
 
 
 def finish(sig):
+    # Trim leading silence/near-silence so playback starts on the transient
+    # instead of a soft ramp-in (perceived latency). Keep a ~0.5ms pre-roll
+    # so the cut itself isn't an audible click.
+    peak = np.max(np.abs(sig))
+    if peak > 1e-9:
+        onset = np.where(np.abs(sig) > 0.005 * peak)[0]
+        if onset.size:
+            sig = sig[max(0, onset[0] - 22):]
     sig = np.tanh(sig * 1.1)
     sig /= (np.max(np.abs(sig)) + 1e-9)
     sig *= 0.89
