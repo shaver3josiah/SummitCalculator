@@ -42,12 +42,27 @@ enum ChordParser {
 
         var rest = String(body.dropFirst())
         var pitch = basePitch
+        var accidental = ""
         if rest.first == "#" || rest.first == "\u{266F}" {
             pitch += 1
+            accidental = "#"
             rest.removeFirst()
         } else if rest.first == "b" || rest.first == "\u{266D}" {
             pitch -= 1
+            accidental = "b"
             rest.removeFirst()
+        }
+
+        // Single note: root + optional accidental + octave digit, e.g. E4, F#3, Bb5.
+        // Octaves 6, 7 and 9 stay chords ("C6"/"G7"/"C9" are chord qualities above,
+        // and dominant 7ths are everywhere) — the note piano only emits octaves
+        // 2…5, so the collision never bites in-app.
+        if rest.count == 1, let octave = rest.first?.wholeNumberValue,
+           (0...8).contains(octave), octave != 6, octave != 7, octave != 9 {
+            let midi = 12 * (octave + 1) + (((pitch % 12) + 12) % 12)
+            guard (21...108).contains(midi) else { return nil }
+            let noteDisplay = String(rootChar).uppercased() + accidental + rest
+            return ChordVoice(midiNotes: [midi], symbol: noteDisplay)
         }
 
         let qualityKey = rest.isEmpty ? "" : rest

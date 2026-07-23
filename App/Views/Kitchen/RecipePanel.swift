@@ -105,13 +105,57 @@ struct RecipeWritePanel: View {
                 .buttonStyle(.plain)
             }
 
-            ShareLink(item: previewText) {
-                Label("Copy for texting", systemImage: "square.and.arrow.up")
-                    .font(summitBody(13, weight: .medium))
-            }
+            shareRow
         }
         .padding(16)
         .background(RoundedRectangle(cornerRadius: theme.radius).fill(theme.color("surface")))
+    }
+
+    /// The two share options next to Save: a self-contained "pretty page" (parchment
+    /// + gold summit marks HTML that opens in Safari from a text) and a clean numbered
+    /// plain-text version for SMS. Both read the live edited draft.
+    private var shareRow: some View {
+        HStack(spacing: 16) {
+            if let url = prettyPageURL() {
+                ShareLink(item: url) {
+                    Label("Pretty page", systemImage: "sparkles")
+                        .font(summitBody(13, weight: .semibold))
+                        .foregroundStyle(theme.color("primaryStrong"))
+                }
+            }
+            ShareLink(item: recipeTextForShare) {
+                Label("Text version", systemImage: "text.alignleft")
+                    .font(summitBody(13, weight: .medium))
+                    .foregroundStyle(theme.color("primaryStrong"))
+            }
+            Spacer()
+        }
+    }
+
+    private var recipeTextForShare: String {
+        RecipeShare.text(name: name, serves: serves, time: time,
+                         ingredients: ingredients, steps: steps,
+                         notes: notes, sourceUrl: "")
+    }
+
+    /// Renders the parchment "pretty page" to a temp .html and returns its URL, so
+    /// ShareLink hands the recipient an openable document (a raw HTML *string*
+    /// would share as plain text).
+    private func prettyPageURL() -> URL? {
+        let html = RecipeShare.html(name: name, serves: serves, time: time,
+                                    ingredients: ingredients, steps: steps,
+                                    notes: notes, sourceUrl: "")
+        guard let data = html.data(using: .utf8) else { return nil }
+        let base = name.isEmpty ? "Recipe" : String(name.prefix(40))
+        let safe = String(base.map { $0.isLetter || $0.isNumber ? $0 : "-" })
+        let fileName = safe.trimmingCharacters(in: CharacterSet(charactersIn: "-")).isEmpty ? "Recipe" : safe
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(fileName).html")
+        do {
+            try data.write(to: url, options: .atomic)
+            return url
+        } catch {
+            return nil
+        }
     }
 
     private var previewText: String {

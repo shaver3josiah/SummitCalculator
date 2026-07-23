@@ -9,6 +9,7 @@ struct SummitApp: App {
     @State private var listsStore = ListsStore()
     @State private var kitchenStore = KitchenStore()
     @State private var musicStore: MusicStore
+    @State private var songBook = SongBook()
     @State private var calcStore: CalcStore
     @State private var projectionStore = ProjectionStore()
     @State private var budgetStore = BudgetStore()
@@ -40,6 +41,7 @@ struct SummitApp: App {
                 .environment(listsStore)
                 .environment(kitchenStore)
                 .environment(musicStore)
+                .environment(songBook)
                 .environment(calcStore)
                 .environment(projectionStore)
                 .environment(budgetStore)
