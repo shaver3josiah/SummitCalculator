@@ -104,6 +104,14 @@ final class ListsStore {
         )
     }
 
+    // MARK: - Notes → list
+
+    /// Bullet/number lines -> items. The real logic (and its tests) live in
+    /// SummitCore.ListParse; this stays as the call site the view already uses.
+    static func listItems(from text: String) -> [String] {
+        ListParse.listItems(from: text)
+    }
+
     func reopen(from entry: HistoryEntry) {
         guard let idString = entry.extra["listId"], let id = UUID(uuidString: idString) else { return }
         if lists.contains(where: { $0.id == id }) {
