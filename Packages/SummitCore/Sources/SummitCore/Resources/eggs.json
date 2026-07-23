@@ -3,18 +3,18 @@
   "id": "to-the-top",
   "kind": "poem",
   "title": "To the Top",
-  "dateLabel": "5 \u00b7 29 \u00b7 53",
+  "dateLabel": "5 · 29 · 53",
   "lines": [
    "On this morning in 1953, two men stood where no one ever had: the top of the world.",
    "They didn't get there in a day. They got there by refusing to stop.",
    "Whatever you're carrying, keep walking. The summit doesn't come to you."
   ],
   "more": [
-   "ask: psst\u2026 iron sharpens iron",
-   "line: Type 27\u00d717 to keep climbing."
+   "ask: psst… iron sharpens iron",
+   "line: Type 27×17 to keep climbing."
   ],
   "triggers": [
-   "5\u00f729\u00f753",
+   "5÷29÷53",
    "5/29/53"
   ]
  },
@@ -22,17 +22,17 @@
   "id": "iron-sharpens-iron",
   "kind": "poem",
   "title": "Iron Sharpens Iron",
-  "dateLabel": "27 \u00b7 17",
+  "dateLabel": "27 · 17",
   "lines": [
-   "As iron sharpens iron, so one man sharpens another. \u2014 Proverbs 27:17",
+   "As iron sharpens iron, so one man sharpens another. — Proverbs 27:17",
    "Nobody summits alone. Find your rope team and hold the line."
   ],
   "more": [
-   "ask: psst\u2026 look up",
+   "ask: psst… look up",
    "line: Type 1+2+1 for the climber's psalm."
   ],
   "triggers": [
-   "27\u00d717",
+   "27×17",
    "27*17"
   ]
  },
@@ -43,11 +43,11 @@
   "dateLabel": "121",
   "lines": [
    "I lift up my eyes to the hills. From where does my help come?",
-   "My help comes from the LORD, the Maker of heaven and earth. \u2014 Psalm 121:1\u20132"
+   "My help comes from the LORD, the Maker of heaven and earth. — Psalm 121:1–2"
   ],
   "more": [
-   "ask: psst\u2026 one more ridge",
-   "line: Type 14\u00d758 for the long haul."
+   "ask: psst… one more ridge",
+   "line: Type 14×58 for the long haul."
   ],
   "triggers": [
    "1+2+1"
@@ -57,29 +57,15 @@
   "id": "fifty-eight-peaks",
   "kind": "poem",
   "title": "Fifty-Eight Peaks",
-  "dateLabel": "14 \u00b7 58",
+  "dateLabel": "14 · 58",
   "lines": [
    "Colorado holds 58 peaks over fourteen thousand feet. Nobody climbs them all in a weekend.",
    "Money grows the same way: one steady climb at a time, and the view keeps getting better."
   ],
   "more": null,
   "triggers": [
-   "14\u00d758",
+   "14×58",
    "14*58"
-  ]
- },
- {
-  "id": "a-little-secret",
-  "kind": "toast",
-  "title": "A little secret",
-  "dateLabel": "",
-  "lines": [
-   "42: the answer to life, the universe, and everything."
-  ],
-  "more": null,
-  "triggers": [
-   "7\u00d76",
-   "6\u00d77"
   ]
  },
  {
@@ -92,7 +78,197 @@
   ],
   "more": null,
   "triggers": [
-   "12\u00d712"
+   "12×12"
+  ]
+ },
+ {
+  "id": "act-like-men",
+  "kind": "poem",
+  "title": "Act Like Men",
+  "dateLabel": "1 COR 16 : 13",
+  "lines": [
+   "Be watchful, stand firm in the faith, act like men, be strong. — 1 Corinthians 16:13",
+   "Four commands. No footnotes."
+  ],
+  "triggers": [
+   "1×16×13",
+   "1*16*13",
+   "1−16−13",
+   "1-16-13",
+   "1÷16÷13",
+   "1/16/13",
+   "1+16+13"
+  ]
+ },
+ {
+  "id": "no-spirit-of-fear",
+  "kind": "poem",
+  "title": "No Spirit of Fear",
+  "dateLabel": "2 TIM 1 : 7",
+  "lines": [
+   "For God gave us a spirit not of fear but of power and love and self-control. — 2 Timothy 1:7",
+   "Fear doesn't get a vote on the mountain."
+  ],
+  "triggers": [
+   "2×1×7",
+   "2*1*7",
+   "2−1−7",
+   "2-1-7",
+   "2÷1÷7",
+   "2/1/7",
+   "2+1+7"
+  ]
+ },
+ {
+  "id": "show-yourself-a-man",
+  "kind": "poem",
+  "title": "A King's Last Words",
+  "dateLabel": "1 KGS 2 : 2",
+  "lines": [
+   "I am about to go the way of all the earth. Be strong, and show yourself a man. — 1 Kings 2:2",
+   "David to Solomon. Still standing orders."
+  ],
+  "triggers": [
+   "1×2×2",
+   "1*2*2",
+   "1−2−2",
+   "1-2-2",
+   "1÷2÷2",
+   "1/2/2",
+   "1+2+2"
+  ]
+ },
+ {
+  "id": "for-our-people",
+  "kind": "poem",
+  "title": "For Our People",
+  "dateLabel": "2 SAM 10 : 12",
+  "lines": [
+   "Be of good courage, and let us be courageous for our people, and for the cities of our God. — 2 Samuel 10:12",
+   "Courage is for somebody. Know who yours is for."
+  ],
+  "triggers": [
+   "2×10×12",
+   "2*10*12",
+   "2−10−12",
+   "2-10-12",
+   "2÷10÷12",
+   "2/10/12",
+   "2+10+12"
+  ]
+ },
+ {
+  "id": "the-lion-prowls",
+  "kind": "poem",
+  "title": "The Lion Prowls",
+  "dateLabel": "1 PET 5 : 8",
+  "lines": [
+   "Be sober-minded; be watchful. Your adversary the devil prowls around like a roaring lion, seeking someone to devour. — 1 Peter 5:8",
+   "Stay alert on the trail."
+  ],
+  "triggers": [
+   "1×5×8",
+   "1*5*8",
+   "1−5−8",
+   "1-5-8",
+   "1÷5÷8",
+   "1/5/8",
+   "1+5+8"
+  ]
+ },
+ {
+  "id": "hands-that-dont-go-weak",
+  "kind": "poem",
+  "title": "Hands That Don't Go Weak",
+  "dateLabel": "2 CHR 15 : 7",
+  "lines": [
+   "But you, take courage! Do not let your hands be weak, for your work shall be rewarded. — 2 Chronicles 15:7",
+   "Keep swinging. The wage is coming."
+  ],
+  "triggers": [
+   "2×15×7",
+   "2*15*7",
+   "2−15−7",
+   "2-15-7",
+   "2÷15÷7",
+   "2/15/7",
+   "2+15+7"
+  ]
+ },
+ {
+  "id": "fight-the-good-fight",
+  "kind": "poem",
+  "title": "Fight the Good Fight",
+  "dateLabel": "1 TIM 6 : 12",
+  "lines": [
+   "Fight the good fight of the faith. Take hold of the eternal life to which you were called. — 1 Timothy 6:12",
+   "Some fights are worth every round."
+  ],
+  "triggers": [
+   "1×6×12",
+   "1*6*12",
+   "1−6−12",
+   "1-6-12",
+   "1÷6÷12",
+   "1/6/12",
+   "1+6+12"
+  ]
+ },
+ {
+  "id": "established-and-guarded",
+  "kind": "poem",
+  "title": "Established and Guarded",
+  "dateLabel": "2 THESS 3 : 3",
+  "lines": [
+   "But the Lord is faithful. He will establish you and guard you against the evil one. — 2 Thessalonians 3:3",
+   "The anchor holds whether you feel it or not."
+  ],
+  "triggers": [
+   "2×3×3",
+   "2*3*3",
+   "2−3−3",
+   "2-3-3",
+   "2÷3÷3",
+   "2/3/3",
+   "2+3+3"
+  ]
+ },
+ {
+  "id": "trained-for-battle",
+  "kind": "poem",
+  "title": "Trained for Battle",
+  "dateLabel": "PSALM 144 : 1",
+  "lines": [
+   "Blessed be the LORD, my rock, who trains my hands for war, and my fingers for battle. — Psalm 144:1",
+   "Strength is trained, not wished for."
+  ],
+  "triggers": [
+   "1×4×4",
+   "1*4*4",
+   "1−4−4",
+   "1-4-4",
+   "1÷4÷4",
+   "1/4/4",
+   "1+4+4"
+  ]
+ },
+ {
+  "id": "i-will-uphold-you",
+  "kind": "poem",
+  "title": "I Will Uphold You",
+  "dateLabel": "ISAIAH 41 : 10",
+  "lines": [
+   "Fear not, for I am with you; be not dismayed, for I am your God; I will strengthen you, I will help you, I will uphold you with my righteous right hand. — Isaiah 41:10",
+   "The strongest grip on the rope isn't yours."
+  ],
+  "triggers": [
+   "4×1×10",
+   "4*1*10",
+   "4−1−10",
+   "4-1-10",
+   "4÷1÷10",
+   "4/1/10",
+   "4+1+10"
   ]
  }
 ]
