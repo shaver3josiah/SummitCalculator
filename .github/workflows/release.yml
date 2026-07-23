@@ -39,6 +39,11 @@ jobs:
       - name: Write App Store Connect API key
         run: |
           echo "${{ secrets.ASC_KEY_P8 }}" > "$RUNNER_TEMP/asc.p8"
+      - name: Revoke stale CI signing certs (avoid Apple's cert cap)
+        continue-on-error: true
+        env:
+          ASC_KEY_FILEPATH: ${{ runner.temp }}/asc.p8
+        run: node scripts/revoke_stale_certs.mjs
       - name: Generate Xcode project
         run: xcodegen generate
       - name: Archive
